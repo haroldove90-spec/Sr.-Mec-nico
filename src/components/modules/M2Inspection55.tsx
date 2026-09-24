@@ -4,13 +4,11 @@ import {
   AlertTriangle,
   XCircle,
   Camera,
-  Filter,
-  Layers,
-  Save,
-  Wrench,
   CheckCheck,
+  ArrowRight,
+  Wrench,
 } from 'lucide-react';
-import { VehicleServiceOrder, InspectionItem, InspectionStatus } from '../../types';
+import { VehicleServiceOrder, InspectionStatus } from '../../types';
 
 interface M2Inspection55Props {
   order: VehicleServiceOrder;
@@ -29,16 +27,13 @@ export const M2Inspection55: React.FC<M2Inspection55Props> = ({
   const [tempNotes, setTempNotes] = useState<string>('');
 
   const points = order.inspectionPoints || [];
-
-  // Group categories
   const categories = Array.from(new Set(points.map((p) => p.category)));
 
-  // Stats
+  // Estadísticas
   const greenCount = points.filter((p) => p.status === 'green').length;
   const yellowCount = points.filter((p) => p.status === 'yellow').length;
   const redCount = points.filter((p) => p.status === 'red').length;
   const inspectedCount = greenCount + yellowCount + redCount;
-  const progressPercent = Math.round((inspectedCount / points.length) * 100);
 
   const handleSetStatus = (id: string, status: InspectionStatus) => {
     const updated = points.map((p) => (p.id === id ? { ...p, status } : p));
@@ -52,7 +47,7 @@ export const M2Inspection55: React.FC<M2Inspection55Props> = ({
     const updated = points.map((p) => ({
       ...p,
       status: 'green' as const,
-      notes: p.status === 'red' ? p.notes : 'En condiciones adecuadas de operación',
+      notes: p.status === 'red' ? p.notes : 'Inspección conforme',
     }));
     onUpdateOrder({
       ...order,
@@ -84,7 +79,6 @@ export const M2Inspection55: React.FC<M2Inspection55Props> = ({
     });
   };
 
-  // Filtered points
   const filteredPoints = points.filter((p) => {
     const matchCategory = selectedCategory === 'todos' || p.category === selectedCategory;
     const matchStatus =
@@ -96,158 +90,94 @@ export const M2Inspection55: React.FC<M2Inspection55Props> = ({
   });
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Module Header */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-16">
+      {/* Header del Módulo */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#D05E28]/10 text-[#D05E28] font-bold text-xs">
-              Módulo M2
-            </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#1A253B]">
-              Inspección de 55 Puntos y Calidad Operativa
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Checklist técnico con semaforización y toma de fotografías de evidencia para diagnóstico de piezas dañadas.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A253B] tracking-tight">
+            Inspección de 55 Puntos
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            Checklist semaforizado y evidencias fotográficas de fallas mecánicas.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handleSetAllGreen}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition"
-            title="Marcar todos en verde por defecto"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-[#1A253B] text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
           >
-            <CheckCheck className="w-4 h-4 text-emerald-600" />
-            <span>Verificar Todo Óptimo</span>
+            <CheckCheck className="w-5 h-5 text-emerald-600" />
+            <span>Todo Óptimo</span>
           </button>
           {onNextStep && (
             <button
               onClick={onNextStep}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
             >
-              <span>Avanzar al Diagnóstico</span>
+              <span>Continuar</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Traffic Light Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-[#1A253B] font-bold text-sm">
-            55
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-500">Puntos Totales</div>
-            <div className="text-base sm:text-lg font-extrabold text-[#1A253B]">
-              {inspectedCount} / {points.length} ({progressPercent}%)
-            </div>
-          </div>
+      {/* Resumen Semaforizado (Limpio y minimalista) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <span className="text-sm font-semibold text-slate-500 block mb-1">Inspeccionados</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#1A253B]">
+            {inspectedCount} / {points.length}
+          </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-xs flex items-center gap-3 bg-emerald-50/30">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-emerald-800">🟢 Buen Estado</div>
-            <div className="text-base sm:text-lg font-extrabold text-emerald-700">{greenCount}</div>
-          </div>
+        <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs bg-emerald-50/20">
+          <span className="text-sm font-semibold text-emerald-800 block mb-1">🟢 Buen Estado</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700">{greenCount}</span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-amber-200 shadow-xs flex items-center gap-3 bg-amber-50/30">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-amber-800">🟡 Precaución</div>
-            <div className="text-base sm:text-lg font-extrabold text-amber-700">{yellowCount}</div>
-          </div>
+        <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs bg-amber-50/20">
+          <span className="text-sm font-semibold text-amber-800 block mb-1">🟡 Precaución</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-amber-700">{yellowCount}</span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-red-200 shadow-xs flex items-center gap-3 bg-red-50/30">
-          <div className="w-10 h-10 rounded-xl bg-red-100 text-red-700 flex items-center justify-center">
-            <XCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-red-800">🔴 Daño Crítico</div>
-            <div className="text-base sm:text-lg font-extrabold text-red-700">{redCount}</div>
-          </div>
+        <div className="bg-white p-5 rounded-2xl border border-red-200 shadow-xs bg-red-50/20">
+          <span className="text-sm font-semibold text-red-800 block mb-1">🔴 Dañado</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-red-700">{redCount}</span>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Category Pill Filters */}
-          <div className="flex flex-wrap items-center gap-1.5">
+      {/* Filtros de Categorías */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setSelectedCategory('todos')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer ${
+              selectedCategory === 'todos'
+                ? 'bg-[#1A253B] text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Todos ({points.length})
+          </button>
+          {categories.map((cat) => (
             <button
-              onClick={() => setSelectedCategory('todos')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                selectedCategory === 'todos'
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer ${
+                selectedCategory === cat
                   ? 'bg-[#1A253B] text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Todos ({points.length})
+              {cat}
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-[#1A253B] text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Status Traffic Light filter */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-            <button
-              onClick={() => setFilterStatus('todos')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                filterStatus === 'todos' ? 'bg-white text-[#1A253B] shadow-xs' : 'text-slate-500'
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              onClick={() => setFilterStatus('red')}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                filterStatus === 'red' ? 'bg-red-600 text-white shadow-xs' : 'text-red-700'
-              }`}
-            >
-              🔴 Rojos ({redCount})
-            </button>
-            <button
-              onClick={() => setFilterStatus('yellow')}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                filterStatus === 'yellow' ? 'bg-amber-500 text-white shadow-xs' : 'text-amber-700'
-              }`}
-            >
-              🟡 Amarillos ({yellowCount})
-            </button>
-            <button
-              onClick={() => setFilterStatus('green')}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                filterStatus === 'green' ? 'bg-emerald-600 text-white shadow-xs' : 'text-emerald-700'
-              }`}
-            >
-              🟢 Verdes ({greenCount})
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Points Checklist */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs divide-y divide-slate-100">
+      {/* Lista de Puntos */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
         {filteredPoints.map((item) => {
           const isRed = item.status === 'red';
           const isYellow = item.status === 'yellow';
@@ -256,131 +186,119 @@ export const M2Inspection55: React.FC<M2Inspection55Props> = ({
           return (
             <div
               key={item.id}
-              className={`p-4 transition hover:bg-slate-50/80 ${
+              className={`p-5 transition hover:bg-slate-50/70 ${
                 isRed ? 'bg-red-50/20' : isYellow ? 'bg-amber-50/20' : ''
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
-                    {isGreen && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-                    {isYellow && <AlertTriangle className="w-5 h-5 text-amber-500" />}
-                    {isRed && <XCircle className="w-5 h-5 text-red-600" />}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="mt-1">
+                    {isGreen && <CheckCircle2 className="w-6 h-6 text-emerald-600" />}
+                    {isYellow && <AlertTriangle className="w-6 h-6 text-amber-500" />}
+                    {isRed && <XCircle className="w-6 h-6 text-red-600" />}
                     {item.status === 'uninspected' && (
-                      <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-300" />
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        {item.category}
-                      </span>
-                      {item.photoUrl && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 flex items-center gap-1">
-                          <Camera className="w-3 h-3" /> Con foto
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="text-sm font-bold text-[#1A253B]">{item.name}</h4>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                      {item.category}
+                    </span>
+                    <h4 className="text-base sm:text-lg font-bold text-[#1A253B]">{item.name}</h4>
                     {item.notes && (
-                      <p className="text-xs text-slate-500 mt-0.5">{item.notes}</p>
+                      <p className="text-sm text-slate-500 mt-1">{item.notes}</p>
                     )}
                   </div>
                 </div>
 
-                {/* Semaforización + Botones de Acción */}
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                {/* Semáforo en grande y táctil */}
+                <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl">
                     <button
                       onClick={() => handleSetStatus(item.id, 'green')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-3.5 py-2 rounded-lg text-sm font-bold transition cursor-pointer ${
                         isGreen ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
                       }`}
-                      title="Buen estado"
                     >
-                      <span>Verde</span>
+                      Verde
                     </button>
                     <button
                       onClick={() => handleSetStatus(item.id, 'yellow')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-3.5 py-2 rounded-lg text-sm font-bold transition cursor-pointer ${
                         isYellow ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
                       }`}
-                      title="Precaución / Medio uso"
                     >
-                      <span>Amarillo</span>
+                      Amarillo
                     </button>
                     <button
                       onClick={() => handleSetStatus(item.id, 'red')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                      className={`px-3.5 py-2 rounded-lg text-sm font-bold transition cursor-pointer ${
                         isRed ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
                       }`}
-                      title="Dañado urgente"
                     >
-                      <span>Rojo</span>
+                      Rojo
                     </button>
                   </div>
 
-                  {/* Tomar foto de evidencia */}
                   <button
                     onClick={() => handleAddEvidencePhoto(item.id)}
-                    className="p-2 rounded-xl border border-slate-200 hover:border-[#D05E28] hover:text-[#D05E28] text-slate-600 transition cursor-pointer"
-                    title="Capturar foto de evidencia"
+                    className="p-2.5 rounded-xl border border-slate-300 hover:border-[#D05E28] hover:text-[#D05E28] text-slate-600 transition cursor-pointer"
+                    title="Foto de Evidencia"
                   >
-                    <Camera className="w-4 h-4" />
+                    <Camera className="w-5 h-5" />
                   </button>
 
-                  {/* Editar nota */}
                   <button
                     onClick={() => {
                       setEditingPointId(editingPointId === item.id ? null : item.id);
                       setTempNotes(item.notes || '');
                     }}
-                    className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs transition cursor-pointer"
-                    title="Agregar notas de diagnóstico"
+                    className="p-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-600 transition cursor-pointer"
+                    title="Agregar Notas"
                   >
-                    <Wrench className="w-4 h-4" />
+                    <Wrench className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Photo preview if attached */}
+              {/* Vista previa de evidencia fotográfica si existe */}
               {item.photoUrl && (
-                <div className="mt-3 flex items-center gap-3 p-2 rounded-xl bg-white border border-slate-200">
+                <div className="mt-4 flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <img
                     src={item.photoUrl}
                     alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg border border-slate-200 shrink-0"
+                    className="w-20 h-20 object-cover rounded-lg border border-slate-200 shrink-0"
                   />
-                  <div className="text-xs">
-                    <span className="font-bold text-red-600">Evidencia de Falla Registrada</span>
-                    <p className="text-slate-500 text-[11px] mt-0.5">
-                      Esta fotografía se incluirá en el comparador interactivo para la autorización del cliente y auditoría de compras.
+                  <div className="text-sm">
+                    <span className="font-bold text-red-600 block">Evidencia de Falla</span>
+                    <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                      Integrada automáticamente en la cotización y comparador del cliente.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Edit Note Drawer */}
+              {/* Editor de Notas */}
               {editingPointId === item.id && (
-                <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                  <label className="text-xs font-bold text-slate-700">Observaciones del Técnico:</label>
+                <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <label className="text-sm font-bold text-slate-700">Observación Técnica:</label>
                   <textarea
                     value={tempNotes}
                     onChange={(e) => setTempNotes(e.target.value)}
                     rows={2}
-                    className="w-full p-2 text-xs rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-                    placeholder="Escribe el diagnóstico técnico exacto..."
+                    className="w-full p-3 text-base rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                    placeholder="Escribe el diagnóstico exacto..."
                   />
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-3">
                     <button
                       onClick={() => setEditingPointId(null)}
-                      className="px-3 py-1 text-xs text-slate-600 hover:bg-slate-200 rounded-lg cursor-pointer"
+                      className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={() => handleSaveNotes(item.id)}
-                      className="px-3 py-1 text-xs bg-[#1A253B] text-white font-semibold rounded-lg hover:bg-[#273756] cursor-pointer"
+                      className="px-5 py-2 text-sm bg-[#1A253B] text-white font-bold rounded-lg hover:bg-[#273756] cursor-pointer"
                     >
                       Guardar Nota
                     </button>

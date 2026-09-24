@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Clock,
   Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { VehicleServiceOrder, DamagedPart } from '../../types';
@@ -104,203 +103,169 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
   const total = subtotal + iva;
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Module Header */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-16">
+      {/* Header del Módulo */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#D05E28]/10 text-[#D05E28] font-bold text-xs">
-              Módulo M3
-            </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#1A253B]">
-              Cotización Dinámica y Autorización Interactiva
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Vista comparativa en una sola página: Pieza Dañada vs Costo vs Pieza Nueva Instalada.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A253B] tracking-tight">
+            Cotización y Autorización
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            Comparador interactivo: Pieza Dañada vs Costo vs Pieza Nueva Instalada.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => setShowAddPartModal(true)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-[#1A253B] text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-[#D05E28]" />
+            <Plus className="w-5 h-5 text-[#D05E28]" />
             <span>Agregar Pieza</span>
           </button>
           {!order.clientAuthorized ? (
             <button
               onClick={handleAuthorizeAll}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
             >
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-5 h-5" />
               <span>Autorizar Reparación</span>
             </button>
           ) : (
-            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-              <span>Autorizado {order.clientAuthTimestamp}</span>
+            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm sm:text-base font-bold">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <span>Autorizado</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Diagnosis Summary Banner */}
-      <div className="bg-gradient-to-r from-[#1A253B] to-[#273756] rounded-2xl p-4 sm:p-6 text-white shadow-md">
-        <div className="flex items-center gap-2 mb-2">
+      {/* Resumen del Diagnóstico (Diseño limpio y minimalista) */}
+      <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-2">
+        <div className="flex items-center gap-2.5">
           <ShieldAlert className="w-5 h-5 text-[#D05E28]" />
-          <h2 className="text-base sm:text-lg font-bold">Diagnóstico Técnico y Reporte de Urgencia</h2>
+          <h2 className="text-base sm:text-lg font-bold text-[#1A253B]">
+            Diagnóstico Técnico de lo Urgente
+          </h2>
         </div>
-        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-4xl">
-          {order.diagnosisSummary ||
-            'Diagnóstico preventivo y correctivo realizado tras inspección de los 55 puntos. Se presentan las refacciones con daño mecánico directo.'}
+        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+          {order.diagnosisSummary || 'Desgaste crítico detectado en la inspección.'}
         </p>
       </div>
 
-      {/* Interactive Visual Comparison: Pieza Dañada | Costo Reemplazo | Pieza Nueva Instalada */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-base text-[#1A253B] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#D05E28]" />
-            <span>Comparador Visual Interactivo de Refacciones</span>
-          </h3>
-          <span className="text-xs text-slate-500">
-            {approvedParts.length} de {parts.length} refacciones autorizadas
-          </span>
-        </div>
-
+      {/* Comparador de Refacciones: Pieza Dañada | Costo | Pieza Nueva */}
+      <div className="space-y-5">
         {parts.map((part) => (
           <div
             key={part.id}
-            className={`bg-white rounded-2xl border transition-all overflow-hidden shadow-xs ${
-              part.approved ? 'border-[#D05E28]/40 ring-1 ring-[#D05E28]/20' : 'border-slate-200 opacity-80'
+            className={`bg-white rounded-2xl border transition-all overflow-hidden shadow-xs p-5 sm:p-6 space-y-5 ${
+              part.approved ? 'border-[#D05E28]/50 ring-1 ring-[#D05E28]/20' : 'border-slate-200 opacity-80'
             }`}
           >
-            <div className="p-4 sm:p-5">
-              {/* Header of the Part */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="checkbox"
-                    checked={part.approved}
-                    onChange={() => handleTogglePartApproval(part.id)}
-                    className="w-4.5 h-4.5 rounded accent-[#D05E28] cursor-pointer"
-                  />
-                  <div>
-                    <h4 className="font-bold text-sm sm:text-base text-[#1A253B]">{part.name}</h4>
-                    <p className="text-xs text-slate-500">{part.description}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      part.urgency === 'urgente'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-amber-100 text-amber-700'
-                    }`}
-                  >
-                    {part.urgency}
-                  </span>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 block sm:inline mr-1">Costo Total:</span>
-                    <span className="font-bold text-sm sm:text-base text-[#1A253B]">
-                      ${(part.cost + part.laborCost).toLocaleString('es-MX')} MXN
-                    </span>
-                  </div>
+            {/* Cabecera de la refacción */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={part.approved}
+                  onChange={() => handleTogglePartApproval(part.id)}
+                  className="w-5 h-5 mt-1 accent-[#D05E28] cursor-pointer"
+                />
+                <div>
+                  <h3 className="font-bold text-lg sm:text-xl text-[#1A253B]">{part.name}</h3>
+                  <p className="text-sm sm:text-base text-slate-500 mt-0.5">{part.description}</p>
                 </div>
               </div>
 
-              {/* 3-Column Interactive Comparison:
-                  Column 1: Pieza Dañada
-                  Column 2: Costo y Desglose
-                  Column 3: Pieza Nueva Instalada */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 items-center">
-                {/* 1. Pieza Dañada */}
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-red-700">
-                    <span className="flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" /> 1. Pieza Dañada (Evidencia)
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-normal">Taller</span>
+              <div className="flex items-center gap-3 self-end sm:self-center">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider ${
+                    part.urgency === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
+                  {part.urgency}
+                </span>
+                <span className="font-extrabold text-lg sm:text-xl text-[#1A253B]">
+                  ${(part.cost + part.laborCost).toLocaleString('es-MX')} MXN
+                </span>
+              </div>
+            </div>
+
+            {/* 3 Columnas Claras: 1. Daño | 2. Inversión | 3. Instalada */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+              {/* 1. Dañada */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-red-700">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>1. Pieza Dañada (Evidencia)</span>
+                </div>
+                <div className="h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative">
+                  <img
+                    src={part.damagedPhotoUrl}
+                    alt={part.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* 2. Desglose de Inversión */}
+              <div className="flex flex-col justify-between p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#1A253B] pb-2 border-b border-slate-200">
+                  <Calculator className="w-4 h-4 text-[#D05E28]" />
+                  <span>2. Desglose de Inversión</span>
+                </div>
+
+                <div className="space-y-2 text-sm sm:text-base">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Refacción:</span>
+                    <strong className="text-[#1A253B]">${part.cost.toLocaleString('es-MX')} MXN</strong>
                   </div>
-                  <div className="relative h-44 rounded-xl overflow-hidden bg-slate-100 border border-red-200 group">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Mano de Obra:</span>
+                    <strong className="text-[#1A253B]">${part.laborCost.toLocaleString('es-MX')} MXN</strong>
+                  </div>
+                  <div className="flex justify-between text-emerald-700 font-semibold pt-1 border-t border-slate-200">
+                    <span>Garantía:</span>
+                    <span>6 Meses</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleTogglePartApproval(part.id)}
+                  className={`w-full py-2.5 rounded-xl text-sm font-bold transition cursor-pointer ${
+                    part.approved
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  {part.approved ? '✓ Autorizada' : '+ Agregar a Reparación'}
+                </button>
+              </div>
+
+              {/* 3. Nueva Instalada */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-emerald-700">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>3. Pieza Nueva Instalada</span>
+                </div>
+                <div className="h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative flex items-center justify-center">
+                  {part.installedPhotoUrl ? (
                     <img
-                      src={part.damagedPhotoUrl}
-                      alt={part.name}
-                      className="w-full h-full object-cover transition group-hover:scale-105"
+                      src={part.installedPhotoUrl}
+                      alt="Instalada"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xs p-1.5 text-white text-[10px] text-center font-medium">
-                      Falla documentada en diagnóstico
+                  ) : (
+                    <div className="text-center p-4 text-slate-400">
+                      <Clock className="w-8 h-8 mx-auto mb-2 opacity-40 text-amber-500" />
+                      <span className="text-sm font-semibold text-slate-600 block">
+                        Pendiente de Instalación
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        Se documentará en bahía del taller
+                      </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* 2. Costo y Cotización */}
-                <div className="flex flex-col justify-center p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#1A253B] pb-1 border-b border-slate-200">
-                    <Calculator className="w-3.5 h-3.5 text-[#D05E28]" />
-                    <span>2. Desglose de Inversión</span>
-                  </div>
-
-                  <div className="flex justify-between text-xs text-slate-600">
-                    <span>Refacción Original / OEM:</span>
-                    <span className="font-semibold text-slate-800">${part.cost.toLocaleString('es-MX')} MXN</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-600">
-                    <span>Mano de Obra Certificada:</span>
-                    <span className="font-semibold text-slate-800">${part.laborCost.toLocaleString('es-MX')} MXN</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400 pt-1 border-t border-slate-200">
-                    <span>Garantía de Reparación:</span>
-                    <span className="font-bold text-emerald-600">6 Meses / 10,000 km</span>
-                  </div>
-
-                  <button
-                    onClick={() => handleTogglePartApproval(part.id)}
-                    className={`w-full py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      part.approved
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                    }`}
-                  >
-                    {part.approved ? '✓ Autorizada por Cliente' : '+ Incluir en Reparación'}
-                  </button>
-                </div>
-
-                {/* 3. Pieza Nueva Instalada */}
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-emerald-700">
-                    <span className="flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" /> 3. Pieza Nueva Instalada
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-normal">Auditoría</span>
-                  </div>
-                  <div className="relative h-44 rounded-xl overflow-hidden bg-slate-100 border border-emerald-200 group flex items-center justify-center">
-                    {part.installedPhotoUrl ? (
-                      <>
-                        <img
-                          src={part.installedPhotoUrl}
-                          alt="Pieza Nueva"
-                          className="w-full h-full object-cover transition group-hover:scale-105"
-                        />
-                        <div className="absolute bottom-0 inset-x-0 bg-emerald-950/80 backdrop-blur-xs p-1.5 text-emerald-100 text-[10px] text-center font-medium">
-                          Instalada por: {part.installedBy || 'Técnico asignado'}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-4 text-center text-slate-400">
-                        <Clock className="w-6 h-6 mx-auto mb-1 opacity-50 text-amber-500" />
-                        <span className="text-xs font-semibold block text-slate-600">
-                          Pendiente de Instalación
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          El mecánico capturará la foto obligatoria en el Paso 9 del taller.
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -308,116 +273,102 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
         ))}
       </div>
 
-      {/* Quote Total Summary Card */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs max-w-md ml-auto space-y-3">
-        <h4 className="font-extrabold text-sm text-[#1A253B] pb-2 border-b border-slate-100">
-          Resumen de Presupuesto Autorizado
+      {/* Resumen Total */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs max-w-md ml-auto space-y-4">
+        <h4 className="font-extrabold text-base sm:text-lg text-[#1A253B] pb-3 border-b border-slate-100">
+          Resumen de Inversión
         </h4>
-        <div className="space-y-1.5 text-xs">
-          <div className="flex justify-between text-slate-600">
-            <span>Refacciones autorizadas:</span>
-            <span className="font-semibold">${partsSubtotal.toLocaleString('es-MX')} MXN</span>
+        <div className="space-y-2 text-sm sm:text-base text-slate-600">
+          <div className="flex justify-between">
+            <span>Refacciones:</span>
+            <strong className="text-[#1A253B]">${partsSubtotal.toLocaleString('es-MX')} MXN</strong>
           </div>
-          <div className="flex justify-between text-slate-600">
-            <span>Mano de obra:</span>
-            <span className="font-semibold">${laborSubtotal.toLocaleString('es-MX')} MXN</span>
+          <div className="flex justify-between">
+            <span>Mano de Obra:</span>
+            <strong className="text-[#1A253B]">${laborSubtotal.toLocaleString('es-MX')} MXN</strong>
           </div>
-          <div className="flex justify-between text-slate-600">
-            <span>Subtotal:</span>
-            <span className="font-semibold">${subtotal.toLocaleString('es-MX')} MXN</span>
-          </div>
-          <div className="flex justify-between text-slate-600">
+          <div className="flex justify-between">
             <span>IVA (16%):</span>
-            <span className="font-semibold">${iva.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN</span>
+            <strong className="text-[#1A253B]">${iva.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN</strong>
           </div>
-          <div className="flex justify-between text-sm sm:text-base font-extrabold text-[#1A253B] pt-2 border-t border-slate-200">
-            <span>Inversión Total:</span>
+          <div className="flex justify-between text-lg sm:text-xl font-extrabold text-[#1A253B] pt-3 border-t border-slate-200">
+            <span>Total:</span>
             <span className="text-[#D05E28]">${total.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN</span>
           </div>
         </div>
 
-        <div className="pt-2">
-          {!order.clientAuthorized ? (
-            <button
-              onClick={handleAuthorizeAll}
-              className="w-full py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Aprobar y Generar Orden de Trabajo</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={onNextStep}
-              className="w-full py-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white font-bold text-xs sm:text-sm transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Continuar al Paso Siguiente</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        <button
+          onClick={order.clientAuthorized ? onNextStep : handleAuthorizeAll}
+          className="w-full py-3.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-base shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>{order.clientAuthorized ? 'Continuar al Siguiente Paso' : 'Aprobar y Generar Orden'}</span>
+          <ArrowRight className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Modal Add Part */}
+      {/* Modal Agregar Pieza */}
       {showAddPartModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4">
-            <h3 className="font-bold text-base text-[#1A253B]">Agregar Refacción a Cotizar</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-4">
+            <h3 className="font-bold text-lg sm:text-xl text-[#1A253B]">Agregar Refacción</h3>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-4">
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Nombre de la Refacción</label>
+                <label className="block text-sm font-semibold text-[#1A253B] mb-1">Nombre</label>
                 <input
                   type="text"
-                  placeholder="Ej: Amortiguador Delantero Monroe Gas..."
+                  placeholder="Ej: Balatas Delanteras Wagner"
                   value={newPart.name}
                   onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 text-base focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Diagnóstico / Motivo de Daño</label>
+                <label className="block text-sm font-semibold text-[#1A253B] mb-1">Diagnóstico</label>
                 <textarea
                   placeholder="Motivo del cambio..."
                   value={newPart.description}
                   onChange={(e) => setNewPart({ ...newPart, description: e.target.value })}
                   rows={2}
-                  className="w-full p-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 text-base focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Costo Refacción ($)</label>
+                  <label className="block text-sm font-semibold text-[#1A253B] mb-1">Costo Pieza ($)</label>
                   <input
                     type="number"
                     value={newPart.cost}
                     onChange={(e) => setNewPart({ ...newPart, cost: Number(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-base font-bold focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1">Mano de Obra ($)</label>
+                  <label className="block text-sm font-semibold text-[#1A253B] mb-1">Mano de Obra ($)</label>
                   <input
                     type="number"
                     value={newPart.laborCost}
                     onChange={(e) => setNewPart({ ...newPart, laborCost: Number(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-base font-bold focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-3 pt-3">
               <button
                 onClick={() => setShowAddPartModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddPart}
-                className="px-4 py-2 text-xs font-bold text-white bg-[#D05E28] hover:bg-[#b84e1e] rounded-lg cursor-pointer"
+                className="px-6 py-2.5 text-sm font-bold text-white bg-[#D05E28] hover:bg-[#b84e1e] rounded-xl cursor-pointer"
               >
-                Guardar y Cotizar
+                Agregar
               </button>
             </div>
           </div>

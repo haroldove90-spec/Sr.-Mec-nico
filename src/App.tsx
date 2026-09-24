@@ -319,12 +319,23 @@ export default function App() {
             />
           )}
 
-          {/* M6: Director General, Productividad y CRM */}
+          {/* M6: Director General - Productividad */}
           {activeModule === 'm6_crm_director' && currentOrder && (
             <M6CRMProductivity
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
               orders={orders}
+              defaultTab="productivity"
+            />
+          )}
+
+          {/* M6: Director General - CRM Post-Venta (WhatsApp) */}
+          {activeModule === 'm6_crm_followup' && currentOrder && (
+            <M6CRMProductivity
+              order={currentOrder}
+              onUpdateOrder={handleUpdateCurrentOrder}
+              orders={orders}
+              defaultTab="crm"
             />
           )}
         </main>

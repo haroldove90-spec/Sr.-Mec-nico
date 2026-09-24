@@ -8,9 +8,9 @@ import {
   Fuel,
   Gauge,
   CheckCircle2,
-  FileText,
   Search,
   Upload,
+  ArrowRight,
 } from 'lucide-react';
 import { VehicleServiceOrder, AestheticPhoto } from '../../types';
 
@@ -90,15 +90,15 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
     const query = searchPlateQuery.trim().toUpperCase();
     if (query.includes('NCY') || query.includes('58')) {
       setHistoryResult(
-        'Historial Clínico Encontrado: 12/Jun/2025 - Servicio de 50,000 km, cambio de aceite sintético. Se advirtió desgaste en balatas delanteras (4mm). Cotización anterior folio #COT-412.'
+        'Historial Encontrado: Servicio de 50,000 km, cambio de aceite sintético. Se advirtió desgaste en balatas delanteras (4mm).'
       );
     } else if (query.includes('RBH') || query.includes('74')) {
       setHistoryResult(
-        'Historial Clínico Encontrado: 20/Ene/2026 - Cambio de batería LTH y afinación menor. No se reportaron fallas de suspensión previas.'
+        'Historial Encontrado: Cambio de batería LTH y afinación menor. No se reportaron fallas mecánicas adicionales.'
       );
     } else {
       setHistoryResult(
-        `Vehículo placa ${query}: Primera vez en el taller. No hay registros previos de fallas ni cotizaciones anteriores en la base clínica.`
+        `Vehículo ${query}: Primera vez en el taller. Sin registros previos en la plataforma.`
       );
     }
   };
@@ -127,30 +127,25 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Module Banner */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-16">
+      {/* Header del Módulo: Minimalista y con tipografía amplia */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-md bg-[#D05E28]/10 text-[#D05E28] font-bold text-xs">
-              Módulo M1
-            </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#1A253B]">
-              Recepción e Historial Clínico
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Registro de cliente, datos fiscales SAT, consulta de expediente histórico y fotos perimetrales.
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A253B] tracking-tight">
+            Recepción e Historial Clínico
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            Registro de cliente, facturación SAT y fotografías perimetrales.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handleSave}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs sm:text-sm font-semibold transition cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-[#1A253B] text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
           >
-            <Save className="w-4 h-4 text-[#D05E28]" />
-            <span>Guardar Cambios</span>
+            <Save className="w-5 h-5 text-[#D05E28]" />
+            <span>Guardar</span>
           </button>
           {onNextStep && (
             <button
@@ -158,242 +153,265 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
                 handleSave();
                 onNextStep();
               }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
             >
-              <span>Avanzar al Paso 2</span>
+              <span>Continuar</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
           )}
         </div>
       </div>
 
       {savedSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>¡Datos del cliente, vehículo y datos fiscales actualizados correctamente!</span>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-800 text-sm sm:text-base font-semibold flex items-center gap-3 animate-in fade-in">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>Datos guardados correctamente.</span>
         </div>
       )}
 
-      {/* Historial Clínico de Autos (Consulta Rápida) */}
-      <div className="bg-gradient-to-br from-slate-900 to-[#1A253B] rounded-2xl p-4 sm:p-6 text-white shadow-md">
-        <div className="flex items-center gap-2 mb-2">
+      {/* Consulta Rápida de Historial Clínico (Minimalista) */}
+      <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-3">
+        <div className="flex items-center gap-2.5">
           <History className="w-5 h-5 text-[#D05E28]" />
-          <h2 className="text-base sm:text-lg font-bold">
-            Expediente e Historial Clínico de Fallas Previas
+          <h2 className="text-base sm:text-lg font-bold text-[#1A253B]">
+            Historial de Servicios Anteriores
           </h2>
         </div>
-        <p className="text-xs text-slate-300 mb-4">
-          Ingresa placas o serie VIN para verificar qué se le ha cotizado, cambiado o diagnosticado con anterioridad en este taller.
-        </p>
 
-        <div className="flex flex-col sm:flex-row gap-2 max-w-xl">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
             <input
               type="text"
               value={searchPlateQuery}
               onChange={(e) => setSearchPlateQuery(e.target.value)}
-              placeholder="Ej: NCY-58-21 o RBH-74-19..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#D05E28]"
+              placeholder="Buscar por placa o número de serie VIN..."
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-base text-[#1A253B] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D05E28] focus:bg-white"
             />
           </div>
           <button
             onClick={handleSearchHistory}
-            className="px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold cursor-pointer transition"
+            className="px-6 py-3 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-sm sm:text-base font-bold cursor-pointer transition shrink-0"
           >
-            Consultar Historial
+            Buscar Historial
           </button>
         </div>
 
         {historyResult && (
-          <div className="mt-4 p-3.5 rounded-xl bg-white/10 border border-white/15 text-xs text-amber-200">
+          <div className="mt-2 p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-sm sm:text-base text-slate-800 font-medium">
             {historyResult}
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 1. Datos del Cliente y Datos Fiscales */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <User className="w-4 h-4 text-[#D05E28]" />
-            <h3 className="font-bold text-sm text-[#1A253B]">Datos de Contacto y Facturación SAT</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        {/* 1. Datos del Cliente y Facturación */}
+        <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <User className="w-5 h-5 text-[#D05E28]" />
+            <h3 className="font-bold text-lg text-[#1A253B]">Cliente y Datos Fiscales SAT</h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="space-y-4">
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">Nombre Completo del Cliente</label>
+              <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                Nombre del Cliente
+              </label>
               <input
                 type="text"
                 value={formData.customerName}
                 onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Teléfono / WhatsApp
+                </label>
+                <input
+                  type="text"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value, customerPhone: e.target.value })}
+                  className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  value={formData.customerEmail}
+                  onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                  className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  RFC
+                </label>
+                <input
+                  type="text"
+                  value={formData.rfc}
+                  onChange={(e) => setFormData({ ...formData, rfc: e.target.value.toUpperCase() })}
+                  className="w-full px-4 py-3 text-base sm:text-lg font-mono font-bold rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Código Postal Fiscal
+                </label>
+                <input
+                  type="text"
+                  value={formData.codigoPostal}
+                  onChange={(e) => setFormData({ ...formData, codigoPostal: e.target.value })}
+                  className="w-full px-4 py-3 text-base sm:text-lg font-mono rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">WhatsApp / Teléfono Móvil</label>
-              <input
-                type="text"
-                value={formData.whatsapp}
-                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value, customerPhone: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Correo Electrónico</label>
-              <input
-                type="email"
-                value={formData.customerEmail}
-                onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">RFC con Homoclave</label>
-              <input
-                type="text"
-                value={formData.rfc}
-                onChange={(e) => setFormData({ ...formData, rfc: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 font-mono focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-slate-500 font-semibold mb-1">Razón Social Fiscal</label>
+              <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                Razón Social
+              </label>
               <input
                 type="text"
                 value={formData.razonSocial}
                 onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
               />
             </div>
+
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">Código Postal Fiscal</label>
-              <input
-                type="text"
-                value={formData.codigoPostal}
-                onChange={(e) => setFormData({ ...formData, codigoPostal: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 font-mono focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Uso de CFDI</label>
-              <input
-                type="text"
-                value={formData.usoCFDI}
-                onChange={(e) => setFormData({ ...formData, usoCFDI: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-slate-500 font-semibold mb-1">Régimen Fiscal SAT</label>
+              <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                Régimen Fiscal
+              </label>
               <input
                 type="text"
                 value={formData.regimenFiscal}
                 onChange={(e) => setFormData({ ...formData, regimenFiscal: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-slate-500 font-semibold mb-1">Domicilio Fiscal Completo</label>
-              <input
-                type="text"
-                value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                className="w-full px-4 py-3 text-sm sm:text-base rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
               />
             </div>
           </div>
         </div>
 
-        {/* 2. Datos del Auto, Odómetro y Combustible */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <Car className="w-4 h-4 text-[#D05E28]" />
-            <h3 className="font-bold text-sm text-[#1A253B]">Información del Vehículo</h3>
+        {/* 2. Información del Vehículo */}
+        <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <Car className="w-5 h-5 text-[#D05E28]" />
+            <h3 className="font-bold text-lg text-[#1A253B]">Datos del Vehículo</h3>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Marca</label>
-              <input
-                type="text"
-                value={formData.make}
-                onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Marca
+                </label>
+                <input
+                  type="text"
+                  value={formData.make}
+                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                  className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Modelo
+                </label>
+                <input
+                  type="text"
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  className="w-full px-4 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Modelo</label>
-              <input
-                type="text"
-                value={formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Año
+                </label>
+                <input
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                  className="w-full px-3 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Placas
+                </label>
+                <input
+                  type="text"
+                  value={formData.plate}
+                  onChange={(e) => setFormData({ ...formData, plate: e.target.value.toUpperCase() })}
+                  className="w-full px-3 py-3 text-base sm:text-lg font-mono font-bold rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                  Color
+                </label>
+                <input
+                  type="text"
+                  value={formData.color}
+                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                  className="w-full px-3 py-3 text-base sm:text-lg rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
             </div>
+
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">Año</label>
-              <input
-                type="number"
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Placas</label>
-              <input
-                type="text"
-                value={formData.plate}
-                onChange={(e) => setFormData({ ...formData, plate: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 font-mono font-bold text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">Color</label>
-              <input
-                type="text"
-                value={formData.color}
-                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-500 font-semibold mb-1">No. Serie / VIN</label>
+              <label className="block text-sm sm:text-base font-semibold text-[#1A253B] mb-1.5">
+                Número de Serie / VIN
+              </label>
               <input
                 type="text"
                 value={formData.vin}
                 onChange={(e) => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 font-mono text-[11px] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                className="w-full px-4 py-3 text-base font-mono rounded-xl border border-slate-300 text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
               />
             </div>
-          </div>
 
-          {/* Odómetro & Combustible */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-1">
-                  <Gauge className="w-4 h-4 text-[#D05E28]" />
-                  <span>Kilometraje Actual</span>
+            {/* Kilometraje y Gasolina */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-2 text-sm sm:text-base font-bold text-slate-700 mb-2">
+                  <Gauge className="w-5 h-5 text-[#D05E28]" />
+                  <span>Kilometraje</span>
                 </div>
                 <div className="relative">
                   <input
                     type="number"
                     value={formData.mileage}
                     onChange={(e) => setFormData({ ...formData, mileage: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 font-mono font-bold text-sm bg-white"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 font-mono font-bold text-lg bg-white"
                   />
-                  <span className="absolute right-3 top-2.5 text-xs text-slate-400">km</span>
+                  <span className="absolute right-3 top-3 text-sm text-slate-400">km</span>
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
-                  <span className="flex items-center gap-1.5">
-                    <Fuel className="w-4 h-4 text-[#D05E28]" />
-                    <span>Nivel de Combustible</span>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between text-sm sm:text-base font-bold text-slate-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Fuel className="w-5 h-5 text-[#D05E28]" />
+                    <span>Gasolina</span>
                   </span>
-                  <span className="font-mono text-[#D05E28]">{formData.fuelLevelPercent}%</span>
+                  <span className="font-bold text-[#D05E28] text-base">{formData.fuelLevelPercent}%</span>
                 </div>
                 <input
                   type="range"
@@ -402,83 +420,69 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
                   step="5"
                   value={formData.fuelLevelPercent}
                   onChange={(e) => setFormData({ ...formData, fuelLevelPercent: Number(e.target.value) })}
-                  className="w-full accent-[#D05E28] cursor-pointer"
+                  className="w-full accent-[#D05E28] cursor-pointer mt-2"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                  <span>Vacío (E)</span>
-                  <span>1/4</span>
-                  <span>1/2</span>
-                  <span>3/4</span>
-                  <span>Lleno (F)</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Captura de Fotos del Estado Estético del Coche */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <Camera className="w-4 h-4 text-[#D05E28]" />
-            <h3 className="font-bold text-sm text-[#1A253B]">
-              Fotografías Perimetrales del Estado Estético
+      {/* 3. Fotos Perimetrales: Diseño claro y legible */}
+      <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <Camera className="w-5 h-5 text-[#D05E28]" />
+            <h3 className="font-bold text-lg sm:text-xl text-[#1A253B]">
+              Fotografías del Estado Físico
             </h3>
           </div>
-          <span className="text-xs text-slate-500">
-            {order.aestheticPhotos.length} fotos registradas
+          <span className="text-sm font-semibold text-slate-500">
+            {order.aestheticPhotos.length} registradas
           </span>
         </div>
 
-        <p className="text-xs text-slate-500">
-          Documentación gráfica preventiva antes de ingresar a bahía de servicio para proteger al cliente y al taller contra reclamos estéticos.
-        </p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
-            { view: 'frontal' as const, label: 'Frontal y Cofre' },
-            { view: 'trasera' as const, label: 'Fascia Trasera y Cajuela' },
-            { view: 'lateral_izq' as const, label: 'Costado Izquierdo' },
-            { view: 'lateral_der' as const, label: 'Costado Derecho' },
-            { view: 'odometro_gas' as const, label: 'Tablero (Km / Gas)' },
+            { view: 'frontal' as const, label: 'Frente' },
+            { view: 'trasera' as const, label: 'Trasera' },
+            { view: 'lateral_izq' as const, label: 'Costado Izq.' },
+            { view: 'lateral_der' as const, label: 'Costado Der.' },
+            { view: 'odometro_gas' as const, label: 'Tablero' },
           ].map((item) => {
             const photo = order.aestheticPhotos.find((p) => p.view === item.view);
 
             return (
               <div
                 key={item.view}
-                className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col group"
+                className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col"
               >
-                <div className="h-32 bg-slate-200 relative overflow-hidden flex items-center justify-center">
+                <div className="h-36 bg-slate-100 relative flex items-center justify-center">
                   {photo ? (
                     <img
                       src={photo.url}
                       alt={item.label}
-                      className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
-                      <Camera className="w-6 h-6 mb-1 opacity-50" />
-                      <span className="text-[10px]">Sin foto</span>
+                    <div className="text-slate-400 text-center p-3">
+                      <Camera className="w-7 h-7 mx-auto mb-1 opacity-40" />
+                      <span className="text-xs">Sin foto</span>
                     </div>
                   )}
 
                   <button
                     onClick={() => handleAddAestheticPhoto(item.view, item.label)}
-                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition text-xs font-semibold gap-1"
+                    className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center text-white transition text-sm font-bold gap-1.5 cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{photo ? 'Cambiar' : 'Tomar'}</span>
+                    <Upload className="w-4 h-4" />
+                    <span>{photo ? 'Cambiar' : 'Subir'}</span>
                   </button>
                 </div>
 
-                <div className="p-2 bg-white flex flex-col justify-between flex-1">
-                  <span className="text-xs font-bold text-[#1A253B] truncate">{item.label}</span>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
-                    <span>{photo ? photo.timestamp : 'Pendiente'}</span>
-                    {photo && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
-                  </div>
+                <div className="p-3 bg-white flex items-center justify-between">
+                  <span className="text-sm font-bold text-[#1A253B]">{item.label}</span>
+                  {photo && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                 </div>
               </div>
             );
