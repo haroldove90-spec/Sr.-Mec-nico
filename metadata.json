@@ -1,0 +1,8 @@
+{
+  "name": "Sr. Mecánico",
+  "description": "Sistema integral de gestión de taller mecánico automotriz: recepción, inspección 55 puntos, cotización dinámica, refacciones, facturación CFDI y CRM post-venta.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
