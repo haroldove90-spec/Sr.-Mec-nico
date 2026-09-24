@@ -76,7 +76,7 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
         return {
           ...p,
           installedPhotoUrl: chosen,
-          installedBy: order.assignedMechanicName || 'Técnico en Bahía',
+          installedBy: order.assignedMechanicName || 'Técnico en Taller',
           installedTimestamp: new Date().toLocaleString('es-MX', {
             hour: '2-digit',
             minute: '2-digit',
@@ -121,7 +121,7 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
             Taller, Evidencias y Cronómetro
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">
-            Pruebas de manejo, reloj de bahía y captura obligatoria de la refacción nueva montada.
+            Pruebas de manejo, reloj de taller y captura obligatoria de la refacción nueva montada.
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-[#1A253B]">
-              Cronómetro de Trabajo en Bahía
+              Cronómetro de Trabajo en Taller
             </h2>
             <p className="text-sm text-slate-500">
               Auto: <strong className="text-[#1A253B]">{order.vehicle.plate}</strong> • Técnico: {order.assignedMechanicName || 'Mecánico asignado'}

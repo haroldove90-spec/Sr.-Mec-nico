@@ -324,7 +324,7 @@ export const AdvisorHistoryPDF: React.FC<AdvisorHistoryPDFProps> = ({
                   onClick={() => onSelectOrder(ord.id)}
                   className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold cursor-pointer"
                 >
-                  Abrir en Bahía Activa
+                  Abrir en Taller Activo
                 </button>
 
                 <button

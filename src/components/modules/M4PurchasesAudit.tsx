@@ -83,7 +83,7 @@ export const M4PurchasesAudit: React.FC<M4PurchasesAuditProps> = ({
             Compras y Auditoría Anti-Robo
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">
-            Validación contable de refacciones adquiridas contra la foto del mecánico en bahía.
+            Validación contable de refacciones adquiridas contra la foto del mecánico en taller.
           </p>
         </div>
 
@@ -248,7 +248,7 @@ export const M4PurchasesAudit: React.FC<M4PurchasesAuditProps> = ({
                   )}
                 </div>
                 <span className="text-xs text-slate-500">
-                  Técnico: {part.installedBy || order.assignedMechanicName || 'En bahía'}
+                  Técnico: {part.installedBy || order.assignedMechanicName || 'En taller'}
                 </span>
               </div>
             </div>

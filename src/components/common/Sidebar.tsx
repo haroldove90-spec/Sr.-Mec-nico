@@ -158,14 +158,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Selector de Vehículo en Trabajo (Limpio y legible) */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/60">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <CarFront className="w-4 h-4 text-[#D05E28]" />
-              {activeRole === 'client' ? 'Mi Vehículo Registrado' : 'Auto en Bahía'}
-            </span>
-            {activeRole !== 'client' && (
+        {/* Selector de Vehículo en Trabajo (Solo para roles técnicos y administrativos, NO para asesor ni cliente) */}
+        {activeRole !== 'front_desk' && activeRole !== 'client' && (
+          <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/60">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <CarFront className="w-4 h-4 text-[#D05E28]" />
+                Auto en Taller
+              </span>
               <button
                 onClick={onNewOrder}
                 className="flex items-center gap-1 text-xs sm:text-sm font-bold text-[#D05E28] hover:text-[#b84e1e] cursor-pointer"
@@ -173,36 +173,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <PlusCircle className="w-4 h-4" />
                 <span>Nuevo</span>
               </button>
-            )}
-          </div>
+            </div>
 
-          <div className="space-y-2">
-            <select
-              value={selectedOrderId}
-              onChange={(e) => onSelectOrder(e.target.value)}
-              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-[#1A253B] focus:outline-none focus:ring-2 focus:ring-[#D05E28]"
-            >
-              {orders.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.vehicle.plate} • {o.vehicle.make} {o.vehicle.model}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-2">
+              <select
+                value={selectedOrderId}
+                onChange={(e) => onSelectOrder(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-[#1A253B] focus:outline-none focus:ring-2 focus:ring-[#D05E28]"
+              >
+                {orders.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.vehicle.plate} • {o.vehicle.make} {o.vehicle.model}
+                  </option>
+                ))}
+              </select>
 
-            {selectedOrder && (
-              <div className="flex items-center justify-between text-xs text-slate-600 px-0.5">
-                <span className="font-semibold truncate max-w-[170px]">
-                  {selectedOrder.customer.name}
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#D05E28]/10 text-[#D05E28]">
-                  Paso {selectedOrder.currentStep} de 16
-                </span>
-              </div>
-            )}
-          </div>
+              {selectedOrder && (
+                <div className="flex items-center justify-between text-xs text-slate-600 px-0.5">
+                  <span className="font-semibold truncate max-w-[170px]">
+                    {selectedOrder.customer.name}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#D05E28]/10 text-[#D05E28]">
+                    Paso {selectedOrder.currentStep} de 16
+                  </span>
+                </div>
+              )}
+            </div>
 
-          {/* Botón Acceso Rápido al Protocolo Continuo (Solo personal del taller) */}
-          {activeRole !== 'client' && (
+            {/* Botón Acceso Rápido al Protocolo Continuo */}
             <button
               onClick={() => {
                 onOpen16Steps();
@@ -216,8 +214,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Lista de Módulos (ÚNICAMENTE los del rol activo) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">

@@ -262,7 +262,7 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
                         Pendiente de Instalación
                       </span>
                       <span className="text-xs text-slate-400">
-                        Se documentará en bahía del taller
+                        Se documentará en el taller
                       </span>
                     </div>
                   )}

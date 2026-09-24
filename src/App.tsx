@@ -34,6 +34,7 @@ import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
 
 const STORAGE_KEY_ORDERS = 'sr_mecanico_orders_v1';
 const STORAGE_KEY_ROLE = 'sr_mecanico_active_role_v1';
+const STORAGE_KEY_MODULE = 'sr_mecanico_active_module_v1';
 const STORAGE_KEY_MOVEMENTS = 'sr_mecanico_advisor_movements_v1';
 
 const INITIAL_ADVISOR_MOVEMENTS: AdvisorMovement[] = [
@@ -138,6 +139,14 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_MOVEMENTS, JSON.stringify(advisorMovements));
   }, [advisorMovements]);
 
+  // Proteger al rol Asesor y Cliente: Nunca permitir acceso a los 16 pasos ni a módulos ajenos
+  useEffect(() => {
+    if (activeRole === 'front_desk' && (activeModule === 'linear_16_steps' || !activeModule.startsWith('advisor_'))) {
+      setActiveModule('advisor_registration');
+      localStorage.setItem(STORAGE_KEY_MODULE, 'advisor_registration');
+    }
+  }, [activeRole, activeModule]);
+
   const handleRecordAdvisorMovement = (movement: Omit<AdvisorMovement, 'id' | 'timestamp'>) => {
     const newMovement: AdvisorMovement = {
       ...movement,
@@ -155,18 +164,23 @@ export default function App() {
     switch (role) {
       case 'front_desk':
         setActiveModule('advisor_registration');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'advisor_registration');
         break;
       case 'mechanic':
         setActiveModule('m2_inspection');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'm2_inspection');
         break;
       case 'admin':
         setActiveModule('m4_purchases');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'm4_purchases');
         break;
       case 'director':
         setActiveModule('m6_crm_director');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'm6_crm_director');
         break;
       case 'client':
         setActiveModule('client_live');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'client_live');
         break;
     }
   };
@@ -353,14 +367,14 @@ export default function App() {
             />
           )}
 
-          {/* 16-Step Continuous Protocol View */}
-          {activeModule === 'linear_16_steps' && currentOrder && (
+          {/* 16-Step Continuous Protocol View (Exclusivo para taller y mecánicos, NUNCA para asesor ni cliente) */}
+          {activeModule === 'linear_16_steps' && activeRole !== 'front_desk' && activeRole !== 'client' && currentOrder && (
             <LinearWorkflowView
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
               orders={orders}
               onBackToDashboard={() => {
-                switch (activeRole) {
+                switch (activeRole as RoleId) {
                   case 'front_desk':
                     setActiveModule('advisor_registration');
                     break;

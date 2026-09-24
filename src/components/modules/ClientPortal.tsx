@@ -89,7 +89,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
     }
     if (step <= 11) {
       return {
-        stage: 'Reparación en Bahía de Servicio',
+        stage: 'Reparación en Taller',
         description: 'El mecánico está trabajando en el auto. Instalando refacciones nuevas con evidencia fotográfica.',
         progress: 75,
         badge: 'En Reparación',
@@ -206,7 +206,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
           {[
             { label: '1. Recepción', done: order.currentStep >= 2, current: order.currentStep <= 2 },
             { label: '2. Diagnóstico', done: order.currentStep >= 5, current: order.currentStep > 2 && order.currentStep <= 5 },
-            { label: '3. En Bahía', done: order.currentStep >= 11, current: order.currentStep > 5 && order.currentStep <= 11 },
+            { label: '3. En Taller', done: order.currentStep >= 11, current: order.currentStep > 5 && order.currentStep <= 11 },
             { label: '4. Entrega', done: order.delivered, current: order.currentStep > 11 },
           ].map((f, i) => (
             <div
@@ -368,7 +368,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
               <div>
                 <h3 className="font-bold text-xl text-[#1A253B]">Presupuesto Detallado</h3>
                 <p className="text-sm text-slate-500 mt-0.5">
-                  Puedes seleccionar las piezas que deseas autorizar para iniciar el trabajo en bahía.
+                  Puedes seleccionar las piezas que deseas autorizar para iniciar el trabajo en taller.
                 </p>
               </div>
 
@@ -415,7 +415,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
                       <img src={part.damagedPhotoUrl} alt="Dañada" className="w-20 h-20 object-cover rounded-lg shrink-0" />
                       <div className="text-xs text-red-900">
                         <strong className="block text-sm">Evidencia de Falla</strong>
-                        <span>Foto capturada en bahía de inspección.</span>
+                        <span>Foto capturada en taller de inspección.</span>
                       </div>
                     </div>
 

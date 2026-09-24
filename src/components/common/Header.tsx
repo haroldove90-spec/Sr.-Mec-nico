@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Action Bar: Role, 16 Steps, PWA Install, Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) - solo para personal del taller */}
-          {onOpen16Steps && activeRole !== 'client' && (
+          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) - solo para personal técnico de taller */}
+          {onOpen16Steps && activeRole !== 'client' && activeRole !== 'front_desk' && (
             <button
               onClick={onOpen16Steps}
               className="hidden md:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-50 text-[#D05E28] border border-[#D05E28]/30 hover:bg-[#D05E28]/10 text-xs font-bold transition cursor-pointer"

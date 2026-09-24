@@ -84,6 +84,42 @@ export interface CFDIInvoice {
   cadenaOriginal: string;
 }
 
+export interface VehicleIntakeInventory {
+  // Nivel de Combustible
+  fuelLevelPercent: number;
+  fuelLevelLabel: 'Reserva' | '1/4' | '1/2' | '3/4' | 'Lleno';
+
+  // Accesorios e Interiores
+  hasFloorMats: boolean;
+  floorMatsDetails?: string;
+  floorMatsType?: 'hule' | 'alfombra';
+  hasSpareTire: boolean;
+  hasJack: boolean;
+  hasLugWrench: boolean;
+  hasWheelLocks: boolean;
+  hasJumperCables: boolean;
+  hasExtinguisherTriangles: boolean;
+  hasAntenna: boolean;
+  hasSideMirrorsGood: boolean;
+  hasGasCap: boolean;
+  hasWheelCaps: boolean;
+  hasRadioStereo: boolean;
+  hasLighterCharger: boolean;
+  missingAccessoriesNotes?: string;
+
+  // Carrocería, Daños y Estética
+  hasScratches: boolean;
+  scratchesDetails?: string;
+  scratchesZones?: string[];
+  hasDents: boolean;
+  dentsDetails?: string;
+  dentsZones?: string[];
+  windshieldGlassStatus: 'intacto' | 'estrellado' | 'picado' | 'polarizado';
+  lightsStatus: 'intactos' | 'rotos' | 'opacos' | 'foco_fundido';
+  tiresStatus: 'buen_estado' | 'desgaste_irregular' | 'chipote' | 'ponchada';
+  valuablesDeclared?: string;
+}
+
 export interface VehicleServiceOrder {
   id: string;
   orderNumber: string;
@@ -108,6 +144,9 @@ export interface VehicleServiceOrder {
     mileage: number;
     fuelLevelPercent: number;
   };
+
+  // Inventario de Recepción y Estado Físico
+  intakeInventory?: VehicleIntakeInventory;
 
   // Step 2: Aesthetic photos
   aestheticPhotos: AestheticPhoto[];

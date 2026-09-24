@@ -208,7 +208,7 @@ export const M5VehicleDelivery: React.FC<M5VehicleDeliveryProps> = ({
                 className="w-5 h-5 mt-0.5 accent-[#D05E28]"
               />
               <div>
-                <span className="font-bold text-[#1A253B] block">Limpieza de Bahía</span>
+                <span className="font-bold text-[#1A253B] block">Limpieza y Acabado en Taller</span>
                 <span className="text-slate-500 text-sm">
                   Vehículo limpio y sin plásticos protectores.
                 </span>
