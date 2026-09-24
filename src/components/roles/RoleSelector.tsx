@@ -4,6 +4,7 @@ import {
   Wrench,
   Receipt,
   TrendingUp,
+  Car,
   LucideIcon,
 } from 'lucide-react';
 import { RoleId } from '../../types';
@@ -17,6 +18,7 @@ interface RoleCardData {
   id: RoleId;
   name: string;
   icon: LucideIcon;
+  badge?: string;
 }
 
 const ROLES: RoleCardData[] = [
@@ -40,12 +42,18 @@ const ROLES: RoleCardData[] = [
     name: 'Director General y CRM (Dirección)',
     icon: TrendingUp,
   },
+  {
+    id: 'client',
+    name: 'Cliente (Monitoreo en Vivo de mi Auto)',
+    icon: Car,
+    badge: 'Nuevo',
+  },
 ];
 
 export const RoleSelector: React.FC<RoleSelectorProps> = ({ onSelectRole }) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+      <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
         {/* Logo oficial a tamaño completo, sin encapsular */}
         <div className="mb-6 sm:mb-8 flex justify-center">
           <img
@@ -56,21 +64,38 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ onSelectRole }) => {
         </div>
 
         {/* Cuadrícula responsiva de acceso por roles:
-            2 Columnas Móvil / 4 Columnas Escritorio.
-            Tarjetas más pequeñas y modestas con ícono y nombre de cada rol. */}
-        <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            2 Columnas Móvil / 3 y 5 Columnas Escritorio.
+            Tarjetas compactas con ícono y nombre de cada rol. */}
+        <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
           {ROLES.map((role) => {
             const Icon = role.icon;
+            const isClient = role.id === 'client';
 
             return (
               <button
                 key={role.id}
                 onClick={() => onSelectRole(role.id)}
-                className="group flex flex-col items-center text-center p-4 sm:p-5 rounded-xl bg-white border border-slate-200/90 shadow-xs hover:border-[#D05E28] hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150 cursor-pointer"
+                className={`group relative flex flex-col items-center text-center p-4 sm:p-5 rounded-2xl bg-white border transition-all duration-150 cursor-pointer ${
+                  isClient
+                    ? 'border-[#D05E28]/40 hover:border-[#D05E28] hover:shadow-lg'
+                    : 'border-slate-200/90 hover:border-[#D05E28] hover:shadow-md'
+                } hover:-translate-y-0.5 active:scale-[0.98]`}
               >
+                {role.badge && (
+                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#D05E28] text-white">
+                    {role.badge}
+                  </span>
+                )}
+
                 {/* Ícono de cada rol */}
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-slate-100 group-hover:bg-[#D05E28]/10 text-slate-700 group-hover:text-[#D05E28] flex items-center justify-center mb-3 transition-colors shrink-0">
-                  <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                <div
+                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-3 transition-colors shrink-0 ${
+                    isClient
+                      ? 'bg-[#D05E28]/10 text-[#D05E28] group-hover:bg-[#D05E28] group-hover:text-white'
+                      : 'bg-slate-100 group-hover:bg-[#D05E28]/10 text-slate-700 group-hover:text-[#D05E28]'
+                  }`}
+                >
+                  <Icon className="w-6 h-6 transition-transform duration-200 group-hover:scale-110" />
                 </div>
 
                 {/* Nombre del rol */}

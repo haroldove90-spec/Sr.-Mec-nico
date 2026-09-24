@@ -22,6 +22,7 @@ import { M4PurchasesAudit } from './components/modules/M4PurchasesAudit';
 import { M5CashierBilling } from './components/modules/M5CashierBilling';
 import { M5VehicleDelivery } from './components/modules/M5VehicleDelivery';
 import { M6CRMProductivity } from './components/modules/M6CRMProductivity';
+import { ClientPortal } from './components/modules/ClientPortal';
 
 // 16-Step Linear Protocol View
 import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
@@ -78,6 +79,9 @@ export default function App() {
         break;
       case 'director':
         setActiveModule('m6_crm_director');
+        break;
+      case 'client':
+        setActiveModule('client_live');
         break;
     }
   };
@@ -251,8 +255,21 @@ export default function App() {
                   case 'director':
                     setActiveModule('m6_crm_director');
                     break;
+                  case 'client':
+                    setActiveModule('client_live');
+                    break;
                 }
               }}
+            />
+          )}
+
+          {/* Portal del Cliente: Monitoreo en Vivo */}
+          {(activeRole === 'client' || activeModule.startsWith('client_')) && currentOrder && (
+            <ClientPortal
+              order={currentOrder}
+              onUpdateOrder={handleUpdateCurrentOrder}
+              orders={orders}
+              onSelectOrder={(id) => setSelectedOrderId(id)}
             />
           )}
 

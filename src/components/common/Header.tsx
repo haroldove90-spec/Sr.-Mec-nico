@@ -16,6 +16,7 @@ const ROLE_DISPLAY_NAMES: Record<RoleId, string> = {
   mechanic: 'Jefe de Taller',
   admin: 'Administración y Caja',
   director: 'Director General',
+  client: 'Cliente (Propietario)',
 };
 
 const ROLE_FULL_NAMES: Record<RoleId, string> = {
@@ -23,6 +24,7 @@ const ROLE_FULL_NAMES: Record<RoleId, string> = {
   mechanic: 'Jefe de Taller y Mecánico (Técnico)',
   admin: 'Administración y Caja (Compras y Contabilidad)',
   director: 'Director General y CRM (Dirección)',
+  client: 'Cliente (Monitoreo en Vivo de mi Auto)',
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -60,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Action Bar: Role, 16 Steps, PWA Install, Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) */}
-          {onOpen16Steps && (
+          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) - solo para personal del taller */}
+          {onOpen16Steps && activeRole !== 'client' && (
             <button
               onClick={onOpen16Steps}
               className="hidden md:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-50 text-[#D05E28] border border-[#D05E28]/30 hover:bg-[#D05E28]/10 text-xs font-bold transition cursor-pointer"

@@ -113,6 +113,17 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
       },
     ],
   },
+  client: {
+    roleTitle: 'Cliente (Propietario)',
+    modules: [
+      {
+        id: 'client_live',
+        label: 'Monitoreo en Tiempo Real',
+        moduleCode: 'AUTO',
+        icon: Car,
+      },
+    ],
+  },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -151,15 +162,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
               <CarFront className="w-4 h-4 text-[#D05E28]" />
-              Auto en Bahía
+              {activeRole === 'client' ? 'Mi Vehículo Registrado' : 'Auto en Bahía'}
             </span>
-            <button
-              onClick={onNewOrder}
-              className="flex items-center gap-1 text-xs sm:text-sm font-bold text-[#D05E28] hover:text-[#b84e1e] cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Nuevo</span>
-            </button>
+            {activeRole !== 'client' && (
+              <button
+                onClick={onNewOrder}
+                className="flex items-center gap-1 text-xs sm:text-sm font-bold text-[#D05E28] hover:text-[#b84e1e] cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Nuevo</span>
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -187,20 +200,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Botón Acceso Rápido al Protocolo Continuo */}
-          <button
-            onClick={() => {
-              onOpen16Steps();
-              onClose();
-            }}
-            className="w-full mt-3 flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#1A253B] text-white hover:bg-[#273756] transition text-sm font-bold cursor-pointer shadow-xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <Workflow className="w-4 h-4 text-[#D05E28]" />
-              <span>Flujo Continuo (16 Pasos)</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
-          </button>
+          {/* Botón Acceso Rápido al Protocolo Continuo (Solo personal del taller) */}
+          {activeRole !== 'client' && (
+            <button
+              onClick={() => {
+                onOpen16Steps();
+                onClose();
+              }}
+              className="w-full mt-3 flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#1A253B] text-white hover:bg-[#273756] transition text-sm font-bold cursor-pointer shadow-xs"
+            >
+              <div className="flex items-center gap-2.5">
+                <Workflow className="w-4 h-4 text-[#D05E28]" />
+                <span>Flujo Continuo (16 Pasos)</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </button>
+          )}
         </div>
 
         {/* Lista de Módulos (ÚNICAMENTE los del rol activo) */}

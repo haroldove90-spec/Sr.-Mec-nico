@@ -54,6 +54,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           { id: 'm6_crm_followup', label: 'CRM WhatsApp', icon: MessageCircle },
           { id: 'linear_16_steps', label: '16 Pasos', icon: Workflow, isSpecial: true },
         ];
+      case 'client':
+        return [
+          { id: 'client_live', label: 'Mi Auto', icon: Car },
+          { id: 'client_quote', label: 'Cotización', icon: Calculator },
+          { id: 'client_evidence', label: 'Fotos', icon: ClipboardList },
+        ];
     }
   };
 

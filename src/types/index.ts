@@ -1,4 +1,4 @@
-export type RoleId = 'front_desk' | 'mechanic' | 'admin' | 'director';
+export type RoleId = 'front_desk' | 'mechanic' | 'admin' | 'director' | 'client';
 
 export interface RoleInfo {
   id: RoleId;
