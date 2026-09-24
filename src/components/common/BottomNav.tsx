@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Workflow,
   MessageCircle,
+  History,
 } from 'lucide-react';
 import { RoleId } from '../../types';
 
@@ -31,10 +32,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     switch (activeRole) {
       case 'front_desk':
         return [
-          { id: 'm1_reception', label: 'Recepción', icon: ClipboardList },
-          { id: 'm3_quote', label: 'Cotización', icon: Calculator },
-          { id: 'm5_delivery', label: 'Entrega', icon: Car },
-          { id: 'linear_16_steps', label: '16 Pasos', icon: Workflow, isSpecial: true },
+          { id: 'advisor_metrics', label: 'Métricas', icon: TrendingUp },
+          { id: 'advisor_registration', label: 'Registro Auto', icon: ClipboardList },
+          { id: 'advisor_history', label: 'Historial PDF', icon: History },
         ];
       case 'mechanic':
         return [

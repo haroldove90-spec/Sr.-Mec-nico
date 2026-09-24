@@ -166,6 +166,25 @@ export interface VehicleServiceOrder {
   nextScheduledDate?: string;
 }
 
+export interface AdvisorMovement {
+  id: string;
+  orderNumber: string;
+  plate: string;
+  customerName: string;
+  action:
+    | 'registro_auto'
+    | 'fotos_esteticas'
+    | 'diagnostico_entregado'
+    | 'cotizacion_generada'
+    | 'autorizacion_cliente'
+    | 'recorrido_coche'
+    | 'entrega_coche';
+  actionLabel: string;
+  description: string;
+  timestamp: string;
+  amount?: number;
+}
+
 export interface MechanicPerformance {
   id: string;
   name: string;

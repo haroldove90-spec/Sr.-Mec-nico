@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { RoleId, VehicleServiceOrder } from './types';
+import { RoleId, VehicleServiceOrder, AdvisorMovement } from './types';
 import { INITIAL_ORDERS, INITIAL_55_INSPECTION_POINTS } from './data/initialData';
 
 // Common Components
@@ -13,7 +13,12 @@ import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
 import { BottomNav } from './components/common/BottomNav';
 
-// Modules
+// Modules for Advisor (Recepción y Asesor)
+import { AdvisorMetrics } from './components/modules/advisor/AdvisorMetrics';
+import { AdvisorRegistrationFlow } from './components/modules/advisor/AdvisorRegistrationFlow';
+import { AdvisorHistoryPDF } from './components/modules/advisor/AdvisorHistoryPDF';
+
+// Other Role Modules
 import { M1Reception } from './components/modules/M1Reception';
 import { M2Inspection55 } from './components/modules/M2Inspection55';
 import { M3QuoteAuthorization } from './components/modules/M3QuoteAuthorization';
@@ -29,15 +34,69 @@ import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
 
 const STORAGE_KEY_ORDERS = 'sr_mecanico_orders_v1';
 const STORAGE_KEY_ROLE = 'sr_mecanico_active_role_v1';
+const STORAGE_KEY_MOVEMENTS = 'sr_mecanico_advisor_movements_v1';
+
+const INITIAL_ADVISOR_MOVEMENTS: AdvisorMovement[] = [
+  {
+    id: 'mov-1',
+    orderNumber: 'SM-2026-0842',
+    plate: 'NCY-58-21',
+    customerName: 'Alejandro Morales Fuentes',
+    action: 'registro_auto',
+    actionLabel: 'Registro de Automóvil',
+    description: 'Ingreso al taller de Volkswagen Jetta Trendline 2021',
+    timestamp: 'Hoy, 09:15 AM',
+  },
+  {
+    id: 'mov-2',
+    orderNumber: 'SM-2026-0842',
+    plate: 'NCY-58-21',
+    customerName: 'Alejandro Morales Fuentes',
+    action: 'fotos_esteticas',
+    actionLabel: 'Fotos Estéticas',
+    description: 'Captura de 5 fotografías perimetrales y tablero',
+    timestamp: 'Hoy, 09:22 AM',
+  },
+  {
+    id: 'mov-3',
+    orderNumber: 'SM-2026-0842',
+    plate: 'NCY-58-21',
+    customerName: 'Alejandro Morales Fuentes',
+    action: 'diagnostico_entregado',
+    actionLabel: 'Diagnóstico Entregado',
+    description: 'Envío de dictamen técnico y evidencias por WhatsApp',
+    timestamp: 'Hoy, 10:45 AM',
+  },
+  {
+    id: 'mov-4',
+    orderNumber: 'SM-2026-0842',
+    plate: 'NCY-58-21',
+    customerName: 'Alejandro Morales Fuentes',
+    action: 'cotizacion_generada',
+    actionLabel: 'Cotización Generada',
+    description: 'Propuesta de balatas delanteras y discos ventilados',
+    timestamp: 'Hoy, 11:10 AM',
+    amount: 3950,
+  },
+  {
+    id: 'mov-5',
+    orderNumber: 'SM-2026-0840',
+    plate: 'RBH-74-19',
+    customerName: 'Mariana Garza Villarreal',
+    action: 'entrega_coche',
+    actionLabel: 'Entrega de Vehículo',
+    description: 'Entrega formal con firma digital y piezas usadas devueltas',
+    timestamp: 'Hoy, 02:30 PM',
+  },
+];
 
 export default function App() {
-  // Start with null to show the clean Start Screen (Selector de Roles sin header ni descripciones)
   const [activeRole, setActiveRole] = useState<RoleId | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_ROLE);
     return saved ? (saved as RoleId) : null;
   });
 
-  const [activeModule, setActiveModule] = useState<string>('m1_reception');
+  const [activeModule, setActiveModule] = useState<string>('advisor_registration');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Orders State with localStorage persistence
@@ -57,10 +116,36 @@ export default function App() {
     orders[0]?.id || 'ord-101'
   );
 
-  // Persist orders to localStorage
+  // Advisor Movements State
+  const [advisorMovements, setAdvisorMovements] = useState<AdvisorMovement[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_MOVEMENTS);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error loading movements from localStorage', e);
+      }
+    }
+    return INITIAL_ADVISOR_MOVEMENTS;
+  });
+
+  // Persist orders & movements to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
   }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_MOVEMENTS, JSON.stringify(advisorMovements));
+  }, [advisorMovements]);
+
+  const handleRecordAdvisorMovement = (movement: Omit<AdvisorMovement, 'id' | 'timestamp'>) => {
+    const newMovement: AdvisorMovement = {
+      ...movement,
+      id: `mov-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+    };
+    setAdvisorMovements((prev) => [newMovement, ...prev]);
+  };
 
   // Set default module when role changes
   const handleSelectRole = (role: RoleId) => {
@@ -69,7 +154,7 @@ export default function App() {
 
     switch (role) {
       case 'front_desk':
-        setActiveModule('m1_reception');
+        setActiveModule('advisor_registration');
         break;
       case 'mechanic':
         setActiveModule('m2_inspection');
@@ -198,10 +283,19 @@ export default function App() {
 
     setOrders((prev) => [newOrder, ...prev]);
     setSelectedOrderId(newId);
-    setActiveModule('m1_reception');
+    setActiveModule('advisor_registration');
+
+    handleRecordAdvisorMovement({
+      orderNumber: newNumber,
+      plate: newOrder.vehicle.plate,
+      customerName: newOrder.customer.name,
+      action: 'registro_auto',
+      actionLabel: 'Registro de Automóvil',
+      description: `Ingreso de auto nuevo: ${newOrder.vehicle.make} ${newOrder.vehicle.model} (${newOrder.vehicle.plate})`,
+    });
   };
 
-  // 1. Start Screen: Selector limpio con tarjetas independientes para cada rol (Sin header, sin descripciones, solo nombre del rol)
+  // 1. Start Screen
   if (!activeRole) {
     return <RoleSelector onSelectRole={handleSelectRole} />;
   }
@@ -233,8 +327,32 @@ export default function App() {
           onOpen16Steps={() => setActiveModule('linear_16_steps')}
         />
 
-        {/* Main Content Area (Clean, single navigation hierarchy without repetitive horizontal tabs) */}
+        {/* Main Content Area */}
         <main className="flex-1 min-w-0 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-80 pb-24 lg:pb-12">
+          {/* Módulos Específicos del Rol: Recepción y Asesor */}
+          {activeRole === 'front_desk' && activeModule === 'advisor_metrics' && (
+            <AdvisorMetrics orders={orders} movements={advisorMovements} />
+          )}
+
+          {activeRole === 'front_desk' && activeModule === 'advisor_registration' && currentOrder && (
+            <AdvisorRegistrationFlow
+              order={currentOrder}
+              onUpdateOrder={handleUpdateCurrentOrder}
+              onNewOrder={handleCreateNewOrder}
+              onRecordMovement={handleRecordAdvisorMovement}
+            />
+          )}
+
+          {activeRole === 'front_desk' && activeModule === 'advisor_history' && (
+            <AdvisorHistoryPDF
+              orders={orders}
+              onSelectOrder={(id) => {
+                setSelectedOrderId(id);
+                setActiveModule('advisor_registration');
+              }}
+            />
+          )}
+
           {/* 16-Step Continuous Protocol View */}
           {activeModule === 'linear_16_steps' && currentOrder && (
             <LinearWorkflowView
@@ -244,7 +362,7 @@ export default function App() {
               onBackToDashboard={() => {
                 switch (activeRole) {
                   case 'front_desk':
-                    setActiveModule('m1_reception');
+                    setActiveModule('advisor_registration');
                     break;
                   case 'mechanic':
                     setActiveModule('m2_inspection');
@@ -273,44 +391,24 @@ export default function App() {
             />
           )}
 
-          {/* M1: Recepción e Historial Clínico */}
-          {activeModule === 'm1_reception' && currentOrder && (
-            <M1Reception
-              order={currentOrder}
-              onUpdateOrder={handleUpdateCurrentOrder}
-              onNextStep={() => setActiveModule('m2_inspection')}
-            />
-          )}
-
-          {/* M2: Inspección de 55 Puntos */}
-          {activeModule === 'm2_inspection' && currentOrder && (
+          {/* Módulos de Jefe de Taller y Mecánico */}
+          {activeRole === 'mechanic' && activeModule === 'm2_inspection' && currentOrder && (
             <M2Inspection55
-              order={currentOrder}
-              onUpdateOrder={handleUpdateCurrentOrder}
-              onNextStep={() => setActiveModule('m3_quote')}
-            />
-          )}
-
-          {/* M3: Cotización Dinámica y Autorización */}
-          {activeModule === 'm3_quote' && currentOrder && (
-            <M3QuoteAuthorization
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
               onNextStep={() => setActiveModule('m4_workshop')}
             />
           )}
 
-          {/* M4: Taller, Evidencia y Cronómetro */}
-          {activeModule === 'm4_workshop' && currentOrder && (
+          {activeRole === 'mechanic' && activeModule === 'm4_workshop' && currentOrder && (
             <M4WorkshopEvidence
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
-              onNextStep={() => setActiveModule('m4_purchases')}
             />
           )}
 
-          {/* M4-A: Compras y Auditoría Anti-Robo */}
-          {activeModule === 'm4_purchases' && currentOrder && (
+          {/* Módulos de Administración y Caja */}
+          {activeRole === 'admin' && activeModule === 'm4_purchases' && currentOrder && (
             <M4PurchasesAudit
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
@@ -318,26 +416,15 @@ export default function App() {
             />
           )}
 
-          {/* M5-C: Caja y Facturación CFDI */}
-          {activeModule === 'm5_billing' && currentOrder && (
+          {activeRole === 'admin' && activeModule === 'm5_billing' && currentOrder && (
             <M5CashierBilling
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
-              onNextStep={() => setActiveModule('m5_delivery')}
             />
           )}
 
-          {/* M5-E: Entrega de Vehículo y Firma */}
-          {activeModule === 'm5_delivery' && currentOrder && (
-            <M5VehicleDelivery
-              order={currentOrder}
-              onUpdateOrder={handleUpdateCurrentOrder}
-              onNextStep={() => setActiveModule('m6_crm_director')}
-            />
-          )}
-
-          {/* M6: Director General - Productividad */}
-          {activeModule === 'm6_crm_director' && currentOrder && (
+          {/* Módulos de Director General y CRM */}
+          {activeRole === 'director' && activeModule === 'm6_crm_director' && currentOrder && (
             <M6CRMProductivity
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
@@ -346,8 +433,7 @@ export default function App() {
             />
           )}
 
-          {/* M6: Director General - CRM Post-Venta (WhatsApp) */}
-          {activeModule === 'm6_crm_followup' && currentOrder && (
+          {activeRole === 'director' && activeModule === 'm6_crm_followup' && currentOrder && (
             <M6CRMProductivity
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}

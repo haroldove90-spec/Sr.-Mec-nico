@@ -14,6 +14,7 @@ import {
   ChevronRight,
   CarFront,
   MessageCircle,
+  History,
 } from 'lucide-react';
 import { RoleId, VehicleServiceOrder } from '../../types';
 
@@ -43,22 +44,22 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
     roleTitle: 'Recepción y Asesor de Servicio',
     modules: [
       {
-        id: 'm1_reception',
-        label: 'Recepción e Historial Clínico',
-        moduleCode: 'M1',
+        id: 'advisor_metrics',
+        label: 'Métricas',
+        moduleCode: 'MET',
+        icon: TrendingUp,
+      },
+      {
+        id: 'advisor_registration',
+        label: 'Registro de Automóviles',
+        moduleCode: 'REG',
         icon: ClipboardList,
       },
       {
-        id: 'm3_quote',
-        label: 'Cotización y Autorización',
-        moduleCode: 'M3',
-        icon: Calculator,
-      },
-      {
-        id: 'm5_delivery',
-        label: 'Entrega de Vehículo y Firma',
-        moduleCode: 'M5',
-        icon: Car,
+        id: 'advisor_history',
+        label: 'Historial y Expedientes PDF',
+        moduleCode: 'HIST',
+        icon: History,
       },
     ],
   },
