@@ -204,7 +204,7 @@ export default function App() {
 
   // 2. Active Role Dashboard View
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+    <div className="min-h-screen w-full flex flex-col bg-[#F8FAFC] overflow-x-hidden">
       {/* Unified Institutional Header */}
       <Header
         activeRole={activeRole}
@@ -214,7 +214,7 @@ export default function App() {
         activeOrderNumber={currentOrder?.orderNumber}
       />
 
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0">
         {/* Desktop Collapsible Sidebar */}
         <Sidebar
           isOpen={isSidebarOpen}
@@ -230,7 +230,7 @@ export default function App() {
         />
 
         {/* Main Content Area (Clean, single navigation hierarchy without repetitive horizontal tabs) */}
-        <main className="flex-1 min-w-0 px-3 sm:px-6 lg:px-8 py-6 lg:ml-72 sm:lg:ml-80 pb-24 lg:pb-12">
+        <main className="flex-1 min-w-0 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-80 pb-24 lg:pb-12">
           {/* 16-Step Continuous Protocol View */}
           {activeModule === 'linear_16_steps' && currentOrder && (
             <LinearWorkflowView

@@ -118,12 +118,12 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             onClick={onBackToDashboard}
-            className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition"
+            className="flex-1 sm:flex-initial px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition text-center"
           >
-            Volver a Módulos
+            Volver
           </button>
 
           <button
@@ -140,9 +140,9 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
           <button
             onClick={handleNextStepAuto}
             disabled={currentStep === 16}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer whitespace-nowrap"
           >
-            <span>Completar y Avanzar ({currentStep < 16 ? `Paso ${currentStep + 1}` : 'Fin'})</span>
+            <span>Avanzar ({currentStep < 16 ? `Paso ${currentStep + 1}` : 'Fin'})</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

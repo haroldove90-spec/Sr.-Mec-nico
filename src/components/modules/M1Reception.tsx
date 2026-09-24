@@ -144,10 +144,10 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs sm:text-sm font-semibold transition cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs sm:text-sm font-semibold transition cursor-pointer"
           >
             <Save className="w-4 h-4 text-[#D05E28]" />
             <span>Guardar Cambios</span>
@@ -158,7 +158,7 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
                 handleSave();
                 onNextStep();
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
             >
               <span>Avanzar al Paso 2</span>
             </button>

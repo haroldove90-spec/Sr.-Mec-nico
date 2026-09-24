@@ -121,10 +121,10 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             onClick={() => setShowAddPartModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer transition"
           >
             <Plus className="w-4 h-4 text-[#D05E28]" />
             <span>Agregar Pieza</span>
@@ -132,13 +132,13 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
           {!order.clientAuthorized ? (
             <button
               onClick={handleAuthorizeAll}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer"
             >
               <CheckCircle className="w-4 h-4" />
               <span>Autorizar Reparación</span>
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
               <CheckCircle className="w-4 h-4 text-emerald-600" />
               <span>Autorizado {order.clientAuthTimestamp}</span>
             </div>

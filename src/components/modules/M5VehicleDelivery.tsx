@@ -151,9 +151,9 @@ export const M5VehicleDelivery: React.FC<M5VehicleDeliveryProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
           {order.delivered && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+            <div className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Vehículo Entregado ({order.deliveryTimestamp})</span>
             </div>
@@ -162,7 +162,7 @@ export const M5VehicleDelivery: React.FC<M5VehicleDeliveryProps> = ({
           {onNextStep && (
             <button
               onClick={onNextStep}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
             >
               <span>Ir a CRM y Seguimiento</span>
               <ArrowRight className="w-4 h-4" />

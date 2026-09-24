@@ -8,9 +8,12 @@ export const PWAInstallButton: React.FC = () => {
 
   if (isInstalled) {
     return (
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-        <span>Sr. Mecánico Instalado</span>
+      <div
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold"
+        title="Sr. Mecánico está instalado en este dispositivo"
+      >
+        <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        <span className="hidden sm:inline">Instalado</span>
       </div>
     );
   }
@@ -30,11 +33,12 @@ export const PWAInstallButton: React.FC = () => {
     <>
       <button
         onClick={handleClick}
-        className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#D05E28] hover:bg-[#b84e1e] active:scale-[0.98] text-white text-xs md:text-sm font-semibold shadow-sm transition-all cursor-pointer"
+        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-[#D05E28] hover:bg-[#b84e1e] active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer shrink-0"
         title="Instala Sr. Mecánico en tu dispositivo"
       >
         <Download className="w-4 h-4 shrink-0" />
-        <span className="whitespace-nowrap">Instala Sr. Mecánico</span>
+        <span className="hidden sm:inline whitespace-nowrap">Instala Sr. Mecánico</span>
+        <span className="inline sm:hidden whitespace-nowrap font-bold">Instalar</span>
       </button>
 
       {showModal && (
@@ -96,7 +100,7 @@ export const PWAInstallButton: React.FC = () => {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#1A253B] text-white font-medium text-xs hover:bg-[#273756] transition"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#1A253B] text-white font-medium text-xs hover:bg-[#273756] transition cursor-pointer"
               >
                 Entendido
               </button>

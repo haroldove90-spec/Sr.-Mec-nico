@@ -141,10 +141,10 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             onClick={handleSaveDrives}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs font-semibold cursor-pointer transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs font-semibold cursor-pointer transition"
           >
             <Save className="w-4 h-4 text-[#D05E28]" />
             <span>Guardar Avance</span>
@@ -155,7 +155,7 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
                 handleSaveDrives();
                 onNextStep();
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
             >
               <span>Avanzar a Prueba Final</span>
             </button>
