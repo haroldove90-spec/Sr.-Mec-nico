@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Car,
   Clock,
@@ -42,31 +42,23 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   activeModule,
   onSelectModule,
 }) => {
-  // Sincronización instantánea y reactiva entre la barra inferior (BottomNav) y el portal
-  const [activeTab, setActiveTab] = useState<'status' | 'quote' | 'evidence'>(() => {
-    if (activeModule === 'client_quote') return 'quote';
-    if (activeModule === 'client_evidence') return 'evidence';
-    return 'status';
-  });
-
-  useEffect(() => {
-    if (activeModule === 'client_quote') {
-      setActiveTab('quote');
-    } else if (activeModule === 'client_evidence') {
-      setActiveTab('evidence');
-    } else if (activeModule === 'client_live') {
-      setActiveTab('status');
-    }
-  }, [activeModule]);
+  // Single Source of Truth directa desde activeModule:
+  // - 'client_quote' => tab 'quote' (Presupuesto y Piezas)
+  // - 'client_evidence' => tab 'evidence' (Fotos de Inspección)
+  // - 'client_live' o cualquier otro => tab 'status' (Resumen y Falla de Mi Auto)
+  const activeTab: 'status' | 'quote' | 'evidence' =
+    activeModule === 'client_quote'
+      ? 'quote'
+      : activeModule === 'client_evidence'
+      ? 'evidence'
+      : 'status';
 
   const handleTabChange = (tab: 'status' | 'quote' | 'evidence') => {
-    setActiveTab(tab);
+    const mod =
+      tab === 'quote' ? 'client_quote' : tab === 'evidence' ? 'client_evidence' : 'client_live';
     if (onSelectModule) {
-      const mod =
-        tab === 'quote' ? 'client_quote' : tab === 'evidence' ? 'client_evidence' : 'client_live';
       onSelectModule(mod);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);

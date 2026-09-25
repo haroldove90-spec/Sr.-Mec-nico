@@ -608,7 +608,6 @@ export default function App() {
         onSelectModule={(mod) => {
           setActiveModule(mod);
           localStorage.setItem(STORAGE_KEY_MODULE, mod);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
       />
