@@ -27,6 +27,9 @@ import {
   X,
   Layers,
   ShieldCheck,
+  Copy,
+  ExternalLink,
+  Send,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -37,6 +40,7 @@ import {
   VehicleIntakeInventory,
 } from '../../../types';
 import { CameraCaptureModal } from '../../common/CameraCaptureModal';
+import { ClientSignatureAuthModal } from '../../common/ClientSignatureAuthModal';
 import { M2DiagnosisTechnical } from '../M2DiagnosisTechnical';
 
 interface AdvisorRegistrationFlowProps {
@@ -238,6 +242,9 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(Boolean(order.digitalSignatureUrl));
   const [receiverName, setReceiverName] = useState(order.receiverName || order.customer.name);
+
+  // Step 7: Modal de Firma Digital y Autorización
+  const [showAuthSignatureModal, setShowAuthSignatureModal] = useState(false);
 
   // Gasolina preset click handler
   const handleSetFuelPreset = (pct: number, label: VehicleIntakeInventory['fuelLevelLabel']) => {
@@ -537,16 +544,25 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
     });
   };
 
-  // Paso 7: Autorización del Cliente
+  // Paso 7: Autorización del Cliente con Firma Digital
   const handleAuthorizeAll = () => {
-    confetti({ particleCount: 70 });
+    setShowAuthSignatureModal(true);
+  };
+
+  const handleConfirmClientAuth = (
+    signatureUrl: string,
+    signerName: string,
+    trackingUrl: string
+  ) => {
     const updatedParts = (order.parts || []).map((p) => ({ ...p, approved: true }));
     onUpdateOrder({
       ...order,
       parts: updatedParts,
       clientAuthorized: true,
       clientAuthTimestamp: new Date().toLocaleString('es-MX'),
-      currentStep: Math.max(order.currentStep, 7),
+      clientAuthSignatureUrl: signatureUrl,
+      clientAuthSignerName: signerName,
+      currentStep: Math.max(order.currentStep, 8),
     });
 
     onRecordMovement?.({
@@ -554,9 +570,11 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
       plate: order.vehicle.plate,
       customerName: order.customer.name,
       action: 'autorizacion_cliente',
-      actionLabel: 'Aprobación del Cliente',
-      description: `Cliente autorizó la orden completa de reparación en taller.`,
+      actionLabel: 'Orden Autorizada con Firma Digital',
+      description: `Autorizada por ${signerName}. Orden firmada y link de monitoreo enviados por WhatsApp.`,
     });
+
+    setShowAuthSignatureModal(false);
   };
 
   // Paso 12: Recorrido Guardado
@@ -1864,48 +1882,149 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
         </div>
       )}
 
-      {/* PASO 7: Autorización del cliente */}
+      {/* PASO 7: Autorización del cliente con Firma Digital */}
       {currentAdvisorStep === 7 && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div>
-                <h3 className="font-bold text-xl text-[#1A253B] flex items-center gap-2.5">
-                  <CheckCircle2 className="w-5 h-5 text-[#D05E28]" />
-                  <span>Paso 7: Autorización del Cliente</span>
+                <h3 className="font-bold text-xl sm:text-2xl text-[#1A253B] flex items-center gap-2.5">
+                  <CheckCircle2 className="w-6 h-6 text-[#D05E28]" />
+                  <span>Paso 7: Autorización con Firma Digital del Cliente</span>
                 </h3>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Recepción y gestión de la aprobación de la cotización.
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  El cliente firma en pantalla y se envía automáticamente la orden con su enlace personalizado de monitoreo por WhatsApp.
                 </p>
               </div>
 
               {!order.clientAuthorized ? (
                 <button
-                  onClick={handleAuthorizeAll}
-                  className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm sm:text-base shadow-xs transition cursor-pointer"
+                  type="button"
+                  onClick={() => setShowAuthSignatureModal(true)}
+                  className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-md transition cursor-pointer flex items-center gap-2.5 transform active:scale-98"
                 >
-                  ✓ Confirmar Aprobación del Cliente
+                  <PenTool className="w-5 h-5" />
+                  <span>Abrir Firma Digital y Autorizar</span>
                 </button>
               ) : (
-                <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-2">
+                <div className="px-5 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-sm font-bold flex items-center gap-2 shadow-xs">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                   <span>Autorizado el {order.clientAuthTimestamp}</span>
                 </div>
               )}
             </div>
 
-            <p className="text-sm sm:text-base text-slate-600">
-              Una vez autorizada, la orden pasa inmediatamente al equipo técnico de taller para el desmontaje y colocación de refacciones nuevas.
-            </p>
+            {/* Si ya está autorizada, mostrar ficha de comprobante con firma y WhatsApp */}
+            {order.clientAuthorized ? (
+              <div className="p-6 rounded-3xl bg-emerald-50/70 border border-emerald-300 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 block">
+                      Comprobante de Autorización Registrado:
+                    </span>
+                    <h4 className="text-lg font-black text-emerald-950 mt-0.5">
+                      Firmado por: {order.clientAuthSignerName || order.customer.name}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-emerald-900 mt-1">
+                      Fecha y Hora: <strong>{order.clientAuthTimestamp}</strong> • Inversión Aprobada: <strong>${totalQuote.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN</strong>
+                    </p>
+                  </div>
+
+                  {order.clientAuthSignatureUrl && (
+                    <div className="bg-white p-3 rounded-2xl border border-emerald-300 shadow-xs text-center shrink-0">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-1">
+                        Firma Digital del Cliente
+                      </span>
+                      <img
+                        src={order.clientAuthSignatureUrl}
+                        alt="Firma del Cliente"
+                        className="h-14 max-w-[180px] object-contain mx-auto"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-emerald-200 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthSignatureModal(true)}
+                    className="px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-900 text-xs font-bold hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <PenTool className="w-3.5 h-3.5" />
+                    <span>Ver o Cambiar Firma</span>
+                  </button>
+
+                  <a
+                    href={`https://wa.me/${order.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                      `Hola ${order.customer.name}, te confirmamos que tu orden #${order.orderNumber} para tu ${order.vehicle.make} ${order.vehicle.model} está en taller. Puedes seguir el avance en vivo aquí: https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${order.customer.phone.replace(/\D/g, '')}&email=${encodeURIComponent(order.customer.email)}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Reenviar WhatsApp con Link de Monitoreo</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const link = `https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${order.customer.phone.replace(/\D/g, '')}&email=${encodeURIComponent(order.customer.email)}`;
+                      navigator.clipboard.writeText(link);
+                      alert('¡Enlace de monitoreo del cliente copiado al portapapeles!');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copiar Link de Monitoreo</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-amber-500/10 text-[#D05E28] rounded-2xl">
+                    <PenTool className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base text-[#1A253B]">
+                      Paso Requerido: Firma del Cliente
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Abre la ventana de firma en tu tablet o móvil para que el cliente plasme su firma con el dedo o puntero.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 block font-semibold">Total a Autorizar con IVA:</span>
+                    <strong className="text-xl font-black text-[#D05E28]">
+                      ${totalQuote.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthSignatureModal(true)}
+                    className="px-5 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    <span>Firmar Ahora</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               <button
+                type="button"
                 onClick={() => setCurrentAdvisorStep(6)}
                 className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
               >
                 Volver al Paso 6
               </button>
               <button
+                type="button"
                 onClick={() => setCurrentAdvisorStep(12)}
                 className="px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm sm:text-base flex items-center gap-2 cursor-pointer shadow-xs"
               >
@@ -2095,6 +2214,14 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
         onClose={() => setCameraModalOpen(false)}
         onCapture={handleCapturePhoto}
         title={`Fotografía: ${activePhotoView?.label || 'Evidencia'}`}
+      />
+
+      {/* Modal de Firma Digital y Autorización (Paso 7) */}
+      <ClientSignatureAuthModal
+        isOpen={showAuthSignatureModal}
+        onClose={() => setShowAuthSignatureModal(false)}
+        order={order}
+        onConfirmAuthorization={handleConfirmClientAuth}
       />
 
       {/* Modal Agregar Pieza en Paso 6 */}

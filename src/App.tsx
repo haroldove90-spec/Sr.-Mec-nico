@@ -28,6 +28,7 @@ import { M5CashierBilling } from './components/modules/M5CashierBilling';
 import { M5VehicleDelivery } from './components/modules/M5VehicleDelivery';
 import { M6CRMProductivity } from './components/modules/M6CRMProductivity';
 import { ClientPortal } from './components/modules/ClientPortal';
+import { ClientLoginView } from './components/modules/ClientLoginView';
 
 // 16-Step Linear Protocol View
 import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
@@ -36,6 +37,7 @@ const STORAGE_KEY_ORDERS = 'sr_mecanico_orders_v1';
 const STORAGE_KEY_ROLE = 'sr_mecanico_active_role_v1';
 const STORAGE_KEY_MODULE = 'sr_mecanico_active_module_v1';
 const STORAGE_KEY_MOVEMENTS = 'sr_mecanico_advisor_movements_v1';
+const STORAGE_KEY_CLIENT_AUTH = 'sr_mecanico_client_auth_order_id_v1';
 
 const INITIAL_ADVISOR_MOVEMENTS: AdvisorMovement[] = [
   {
@@ -117,6 +119,65 @@ export default function App() {
     orders[0]?.id || 'ord-101'
   );
 
+  // Client Authentication State
+  const [isClientAuthenticated, setIsClientAuthenticated] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem(STORAGE_KEY_CLIENT_AUTH));
+  });
+
+  // Escuchar parámetros de URL para acceso directo del cliente (Link de Monitoreo)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tracking = params.get('tracking') || params.get('orden') || params.get('order');
+    const phone = params.get('phone') || params.get('telefono') || params.get('auth');
+    const email = params.get('email') || params.get('correo');
+
+    if (tracking || phone || email) {
+      const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
+      const cleanTracking = tracking ? tracking.trim().toUpperCase() : '';
+
+      const matched = orders.find((o) => {
+        if (cleanTracking && (o.orderNumber.toUpperCase() === cleanTracking || o.id === cleanTracking)) {
+          return true;
+        }
+        const oPhone = o.customer.phone.replace(/\D/g, '');
+        const oEmail = o.customer.email.trim().toLowerCase();
+        if (cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone))) {
+          return true;
+        }
+        if (cleanEmail && oEmail === cleanEmail) {
+          return true;
+        }
+        return false;
+      });
+
+      if (matched) {
+        setSelectedOrderId(matched.id);
+        setActiveRole('client');
+        setActiveModule('client_live');
+        setIsClientAuthenticated(true);
+        localStorage.setItem(STORAGE_KEY_ROLE, 'client');
+        localStorage.setItem(STORAGE_KEY_MODULE, 'client_live');
+        localStorage.setItem(STORAGE_KEY_CLIENT_AUTH, matched.id);
+      }
+    }
+  }, [orders]);
+
+  const handleClientLoginSuccess = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setIsClientAuthenticated(true);
+    setActiveRole('client');
+    setActiveModule('client_live');
+    localStorage.setItem(STORAGE_KEY_ROLE, 'client');
+    localStorage.setItem(STORAGE_KEY_MODULE, 'client_live');
+    localStorage.setItem(STORAGE_KEY_CLIENT_AUTH, orderId);
+  };
+
+  const handleClientLogout = () => {
+    setIsClientAuthenticated(false);
+    localStorage.removeItem(STORAGE_KEY_CLIENT_AUTH);
+  };
+
   // Advisor Movements State
   const [advisorMovements, setAdvisorMovements] = useState<AdvisorMovement[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_MOVEMENTS);
@@ -187,7 +248,9 @@ export default function App() {
 
   const handleLogout = () => {
     setActiveRole(null);
+    setIsClientAuthenticated(false);
     localStorage.removeItem(STORAGE_KEY_ROLE);
+    localStorage.removeItem(STORAGE_KEY_CLIENT_AUTH);
   };
 
   // Find currently active order
@@ -314,7 +377,18 @@ export default function App() {
     return <RoleSelector onSelectRole={handleSelectRole} />;
   }
 
-  // 2. Active Role Dashboard View
+  // 2. Portal de Monitoreo del Cliente: Formulario de Acceso por Correo y Teléfono
+  if (activeRole === 'client' && !isClientAuthenticated) {
+    return (
+      <ClientLoginView
+        orders={orders}
+        onLoginSuccess={handleClientLoginSuccess}
+        onBackToRoles={handleLogout}
+      />
+    );
+  }
+
+  // 3. Active Role Dashboard View
   return (
     <div className="min-h-screen w-full flex flex-col bg-[#F8FAFC] overflow-x-hidden">
       {/* Unified Institutional Header */}
@@ -402,6 +476,7 @@ export default function App() {
               onUpdateOrder={handleUpdateCurrentOrder}
               orders={orders}
               onSelectOrder={(id) => setSelectedOrderId(id)}
+              onLogout={handleClientLogout}
             />
           )}
 

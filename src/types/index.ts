@@ -175,6 +175,8 @@ export interface VehicleServiceOrder {
   technicalDiagnosis?: TechnicalDiagnosisRecord;
   clientAuthorized: boolean;
   clientAuthTimestamp?: string;
+  clientAuthSignatureUrl?: string; // Firma digital en el Paso 7 (Autorización del servicio)
+  clientAuthSignerName?: string; // Nombre del cliente o representante que autoriza
 
   // Step 8 & 9: Work order & Mechanic
   assignedMechanicId?: string;

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { VehicleServiceOrder, DamagedPart } from '../../types';
+import { ClientSignatureAuthModal } from '../common/ClientSignatureAuthModal';
 
 interface M3QuoteAuthorizationProps {
   order: VehicleServiceOrder;
@@ -24,6 +25,7 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
   onNextStep,
 }) => {
   const [showAddPartModal, setShowAddPartModal] = useState(false);
+  const [showAuthSignatureModal, setShowAuthSignatureModal] = useState(false);
   const [newPart, setNewPart] = useState<Partial<DamagedPart>>({
     name: '',
     description: '',
@@ -74,21 +76,26 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
   };
 
   const handleAuthorizeAll = () => {
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+    setShowAuthSignatureModal(true);
+  };
 
+  const handleConfirmClientAuthorization = (
+    signatureUrl: string,
+    signerName: string,
+    trackingUrl: string
+  ) => {
     const updatedParts = parts.map((p) => ({ ...p, approved: true }));
     onUpdateOrder({
       ...order,
       parts: updatedParts,
       clientAuthorized: true,
       clientAuthTimestamp: new Date().toLocaleString('es-MX'),
+      clientAuthSignatureUrl: signatureUrl,
+      clientAuthSignerName: signerName,
       currentStep: Math.max(order.currentStep, 8),
     });
 
+    setShowAuthSignatureModal(false);
     if (onNextStep) {
       setTimeout(onNextStep, 600);
     }
@@ -298,13 +305,21 @@ export const M3QuoteAuthorization: React.FC<M3QuoteAuthorizationProps> = ({
         </div>
 
         <button
-          onClick={order.clientAuthorized ? onNextStep : handleAuthorizeAll}
-          className="w-full py-3.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-base shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
+          onClick={order.clientAuthorized ? onNextStep : () => setShowAuthSignatureModal(true)}
+          className="w-full py-3.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-black text-base shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
         >
-          <span>{order.clientAuthorized ? 'Continuar al Siguiente Paso' : 'Aprobar y Generar Orden'}</span>
+          <span>{order.clientAuthorized ? 'Continuar al Siguiente Paso' : '✍️ Firmar y Autorizar Orden de Servicio'}</span>
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Modal de Firma Digital y Autorización */}
+      <ClientSignatureAuthModal
+        isOpen={showAuthSignatureModal}
+        onClose={() => setShowAuthSignatureModal(false)}
+        order={order}
+        onConfirmAuthorization={handleConfirmClientAuthorization}
+      />
 
       {/* Modal Agregar Pieza */}
       {showAddPartModal && (
