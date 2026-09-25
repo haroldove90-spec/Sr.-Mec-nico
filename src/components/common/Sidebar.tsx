@@ -15,6 +15,8 @@ import {
   CarFront,
   MessageCircle,
   History,
+  BookOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { RoleId, VehicleServiceOrder } from '../../types';
 
@@ -44,22 +46,34 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
     roleTitle: 'Recepción y Asesor de Servicio',
     modules: [
       {
-        id: 'advisor_metrics',
-        label: 'Métricas',
-        moduleCode: 'MET',
-        icon: TrendingUp,
-      },
-      {
         id: 'advisor_registration',
-        label: 'Registro de Automóviles',
+        label: 'Registro e Inventario de Autos',
         moduleCode: 'REG',
         icon: ClipboardList,
+      },
+      {
+        id: 'advisor_delivery',
+        label: 'Entrega y Retorno de Piezas',
+        moduleCode: 'ENT',
+        icon: CheckCircle2,
       },
       {
         id: 'advisor_history',
         label: 'Historial y Expedientes PDF',
         moduleCode: 'HIST',
         icon: History,
+      },
+      {
+        id: 'advisor_metrics',
+        label: 'Métricas de Asesor',
+        moduleCode: 'MET',
+        icon: TrendingUp,
+      },
+      {
+        id: 'role_manual',
+        label: 'Manual del Asesor',
+        moduleCode: 'DOC',
+        icon: BookOpen,
       },
     ],
   },
@@ -78,6 +92,12 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
         moduleCode: 'M4',
         icon: Wrench,
       },
+      {
+        id: 'role_manual',
+        label: 'Manual del Mecánico',
+        moduleCode: 'DOC',
+        icon: BookOpen,
+      },
     ],
   },
   admin: {
@@ -94,6 +114,12 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
         label: 'Caja y Facturación CFDI',
         moduleCode: 'M5',
         icon: Receipt,
+      },
+      {
+        id: 'role_manual',
+        label: 'Manual de Administración',
+        moduleCode: 'DOC',
+        icon: BookOpen,
       },
     ],
   },
@@ -112,6 +138,12 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
         moduleCode: 'M6',
         icon: MessageCircle,
       },
+      {
+        id: 'role_manual',
+        label: 'Manual del Director',
+        moduleCode: 'DOC',
+        icon: BookOpen,
+      },
     ],
   },
   client: {
@@ -122,6 +154,12 @@ const ROLE_MODULES_MAP: Record<RoleId, { roleTitle: string; modules: NavMenuItem
         label: 'Monitoreo en Tiempo Real',
         moduleCode: 'AUTO',
         icon: Car,
+      },
+      {
+        id: 'role_manual',
+        label: 'Guía de Monitoreo',
+        moduleCode: 'DOC',
+        icon: BookOpen,
       },
     ],
   },
@@ -158,8 +196,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Selector de Vehículo en Trabajo (Solo para roles técnicos y administrativos, NO para asesor ni cliente) */}
-        {activeRole !== 'front_desk' && activeRole !== 'client' && (
+        {/* Selector de Vehículo en Trabajo (EXCLUSIVO para Jefe de Taller / Mecánico. Se retira de Asesor, Cliente, Administración y Director) */}
+        {activeRole === 'mechanic' && (
           <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/60">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">

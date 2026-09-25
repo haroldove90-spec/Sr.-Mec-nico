@@ -18,8 +18,11 @@ import {
   ExternalLink,
   Copy,
   LogOut,
+  Bell,
+  Volume2,
 } from 'lucide-react';
 import { VehicleServiceOrder } from '../../types';
+import { AppNotification } from '../../types/notifications';
 import { ClientSignatureAuthModal } from '../common/ClientSignatureAuthModal';
 import { getClientTrackingUrl } from '../../utils/trackingUrl';
 
@@ -31,6 +34,7 @@ interface ClientPortalProps {
   onLogout?: () => void;
   activeModule?: string;
   onSelectModule?: (moduleId: string) => void;
+  notifications?: AppNotification[];
 }
 
 export const ClientPortal: React.FC<ClientPortalProps> = ({
@@ -41,6 +45,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   onLogout,
   activeModule,
   onSelectModule,
+  notifications = [],
 }) => {
   // Single Source of Truth directa desde activeModule:
   // - 'client_quote' => tab 'quote' (Presupuesto y Piezas)
@@ -358,6 +363,43 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
           )}
         </div>
       )}
+
+      {/* Avisos en Vivo del Taller para el Cliente */}
+      {(() => {
+        const clientNotifs = notifications.filter(
+          (n) =>
+            (n.targetRoles.includes('client') || n.targetRoles.includes('all')) &&
+            (!n.vehiclePlate || n.vehiclePlate === order.vehicle.plate)
+        );
+        if (clientNotifs.length === 0) return null;
+        return (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-3xl p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-[#D05E28] flex items-center gap-1.5">
+                <Bell className="w-4 h-4 animate-bounce" />
+                Avisos y Actualizaciones del Taller
+              </span>
+              <span className="text-[11px] font-bold text-amber-950 bg-white/90 px-2.5 py-0.5 rounded-full border border-amber-200 shadow-2xs">
+                {clientNotifs.length} {clientNotifs.length === 1 ? 'notificación activa' : 'notificaciones activas'}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {clientNotifs.slice(0, 2).map((cn) => (
+                <div
+                  key={cn.id}
+                  className="text-xs sm:text-sm font-semibold text-slate-800 flex items-start gap-2 bg-white/70 p-2.5 rounded-2xl border border-amber-100"
+                >
+                  <Volume2 className="w-4 h-4 text-[#D05E28] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <strong className="block text-[#1A253B] font-bold">{cn.title}</strong>
+                    <span>{cn.message}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Navegación por Pestañas del Cliente (Sincronizada con la barra inferior) */}
       <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar py-1">

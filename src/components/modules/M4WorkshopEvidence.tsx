@@ -10,8 +10,14 @@ import {
   Sparkles,
   Save,
   ArrowRight,
+  AlertTriangle,
+  Send,
+  CheckCircle2,
+  Plus,
+  X,
+  CheckCheck,
 } from 'lucide-react';
-import { VehicleServiceOrder, TestDriveRecord } from '../../types';
+import { VehicleServiceOrder, TestDriveRecord, DamagedPart } from '../../types';
 
 interface M4WorkshopEvidenceProps {
   order: VehicleServiceOrder;
@@ -30,6 +36,18 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
   const [initialDrive, setInitialDrive] = useState<TestDriveRecord>(order.initialTestDrive);
   const [finalDrive, setFinalDrive] = useState<TestDriveRecord>(order.finalTestDrive);
   const [correctionsText, setCorrectionsText] = useState(order.correctionsNotes || '');
+
+  // Modal para reportar falla imprevista
+  const [isFaultModalOpen, setIsFaultModalOpen] = useState(false);
+  const [faultName, setFaultName] = useState('');
+  const [faultDesc, setFaultDesc] = useState('');
+  const [faultCost, setFaultCost] = useState('1450');
+  const [faultLabor, setFaultLabor] = useState('450');
+  const [faultUrgency, setFaultUrgency] = useState<'urgente' | 'preventivo' | 'recomendado'>('urgente');
+  const [faultPhotoUrl, setFaultPhotoUrl] = useState(
+    'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80'
+  );
+  const [notifSuccessMessage, setNotifSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -103,6 +121,66 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
       correctionsCompleted: true,
       timeSpentMinutes: Math.floor(timerSeconds / 60),
     });
+  };
+
+  const handleSubmitNewFault = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!faultName.trim()) return;
+
+    const newPart: DamagedPart = {
+      id: `fault-${Date.now()}`,
+      name: faultName.trim(),
+      description: faultDesc.trim() || 'Falla no contemplada detectada durante el servicio en bahía.',
+      damagedPhotoUrl: faultPhotoUrl,
+      installedPhotoUrl: '',
+      cost: parseFloat(faultCost) || 1200,
+      laborCost: parseFloat(faultLabor) || 400,
+      urgency: faultUrgency,
+      approved: false, // Requiere autorización del cliente
+      supplier: 'Almacén Central',
+      purchaseCost: (parseFloat(faultCost) || 1200) * 0.7,
+    };
+
+    onUpdateOrder({
+      ...order,
+      parts: [...(order.parts || []), newPart],
+      clientAuthorized: false, // Provoca que el cliente y asesor deban autorizar
+      currentStep: Math.min(order.currentStep, 6),
+    });
+
+    setIsFaultModalOpen(false);
+    setFaultName('');
+    setFaultDesc('');
+    setNotifSuccessMessage(
+      `Falla "${newPart.name}" registrada con foto. Se enviaron notificaciones con sonido Beep al Asesor y al Cliente para su firma digital.`
+    );
+    setTimeout(() => setNotifSuccessMessage(null), 5000);
+  };
+
+  const handleFinishWorkshopRepair = () => {
+    const updatedOrder: VehicleServiceOrder = {
+      ...order,
+      initialTestDrive: initialDrive,
+      finalTestDrive: {
+        ...finalDrive,
+        brakingGood: true,
+        steeringAlignment: true,
+        completed: true,
+        testerName: order.assignedMechanicName || 'Jefe de Taller',
+      },
+      correctionsNotes: correctionsText || 'Reparación y ajustes completados a satisfacción.',
+      correctionsCompleted: true,
+      currentStep: Math.max(order.currentStep, 14),
+      timeSpentMinutes: Math.floor(timerSeconds / 60),
+      isTimerRunning: false,
+    };
+    setIsRunning(false);
+    onUpdateOrder(updatedOrder);
+
+    setNotifSuccessMessage(
+      '¡Trabajo de taller finalizado! Se enviaron notificaciones a Cliente (auto listo), Asesor (listo para entrega) y Administración (preparar factura).'
+    );
+    setTimeout(() => setNotifSuccessMessage(null), 6000);
   };
 
   const formatTime = (secs: number) => {
@@ -350,6 +428,191 @@ export const M4WorkshopEvidence: React.FC<M4WorkshopEvidenceProps> = ({
           </div>
         </div>
       </div>
+      {/* Mensaje de Confirmación de Notificación */}
+      {notifSuccessMessage && (
+        <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-4 text-emerald-900 text-sm sm:text-base font-bold flex items-center gap-3 animate-in fade-in shadow-xs">
+          <CheckCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+          <span>{notifSuccessMessage}</span>
+        </div>
+      )}
+
+      {/* Módulo de Notificaciones Directas del Mecánico a Asesor, Cliente y Administración */}
+      <div className="bg-gradient-to-r from-slate-900 to-[#1A253B] rounded-3xl p-6 sm:p-7 text-white shadow-lg space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+          <div>
+            <h3 className="font-extrabold text-lg sm:text-xl flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-[#D05E28]" />
+              <span>Avisos de Taller y Notificaciones en Tiempo Real</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
+              Notifica al asesor y cliente sobre fallas imprevistas, o avisa a administración cuando el auto esté listo para facturación.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={() => setIsFaultModalOpen(true)}
+            className="flex items-center justify-center gap-2.5 p-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm sm:text-base transition cursor-pointer shadow-md"
+          >
+            <Camera className="w-5 h-5" />
+            <span>Reportar Falla Nueva con Foto</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFinishWorkshopRepair}
+            className="flex items-center justify-center gap-2.5 p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm sm:text-base transition cursor-pointer shadow-md"
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            <span>Finalizar Auto y Notificar Listo</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Modal para Reportar Falla Imprevista con Evidencia */}
+      {isFaultModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-[#1A253B]">
+                    Detectar Falla Imprevista
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Auto: {order.vehicle.plate} • {order.vehicle.make} {order.vehicle.model}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFaultModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitNewFault} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Nombre de la Refacción o Falla Encontrada *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={faultName}
+                  onChange={(e) => setFaultName(e.target.value)}
+                  placeholder="Ej: Fuga en amortiguador delantero derecho"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Descripción Técnica de la Evidencia
+                </label>
+                <textarea
+                  rows={2}
+                  value={faultDesc}
+                  onChange={(e) => setFaultDesc(e.target.value)}
+                  placeholder="Describe la fuga, desgaste excesivo o fisura observada..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-[#1A253B] focus:ring-2 focus:ring-[#D05E28] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Costo Refacción ($ MXN)
+                  </label>
+                  <input
+                    type="number"
+                    value={faultCost}
+                    onChange={(e) => setFaultCost(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-[#1A253B]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Mano de Obra ($ MXN)
+                  </label>
+                  <input
+                    type="number"
+                    value={faultLabor}
+                    onChange={(e) => setFaultLabor(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-[#1A253B]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Severidad
+                </label>
+                <div className="flex gap-2">
+                  {(['urgente', 'preventivo', 'recomendado'] as const).map((urg) => (
+                    <button
+                      key={urg}
+                      type="button"
+                      onClick={() => setFaultUrgency(urg)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold capitalize transition ${
+                        faultUrgency === urg
+                          ? urg === 'urgente'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-[#D05E28] text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {urg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Foto de Evidencia de Falla */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                  Foto de Evidencia del Taller
+                </label>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={faultPhotoUrl}
+                    alt="Evidencia"
+                    className="w-20 h-20 rounded-xl object-cover border border-slate-200"
+                  />
+                  <div className="text-xs text-slate-500">
+                    <p className="font-semibold text-slate-700">Evidencia gráfica de bahía</p>
+                    <p>Se enviará al expediente del asesor y al portal interactivo del cliente.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsFaultModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm shadow-md transition cursor-pointer flex items-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Enviar y Notificar (Beep)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -29,9 +29,20 @@ import { M5VehicleDelivery } from './components/modules/M5VehicleDelivery';
 import { M6CRMProductivity } from './components/modules/M6CRMProductivity';
 import { ClientPortal } from './components/modules/ClientPortal';
 import { ClientLoginView } from './components/modules/ClientLoginView';
+import { UserManualModule } from './components/modules/UserManualModule';
 
 // 16-Step Linear Protocol View
 import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
+
+// Notifications and Sound
+import { AppNotification, NotificationTargetRole, NotificationType } from './types/notifications';
+import {
+  STORAGE_KEY_NOTIFICATIONS,
+  INITIAL_NOTIFICATIONS,
+  createNotification,
+} from './services/notificationService';
+import { playNotificationBeep } from './utils/sound';
+import { NotificationToastContainer } from './components/common/NotificationToastContainer';
 
 const STORAGE_KEY_ORDERS = 'sr_mecanico_orders_v1';
 const STORAGE_KEY_ROLE = 'sr_mecanico_active_role_v1';
@@ -143,6 +154,88 @@ export default function App() {
     }
     return Boolean(localStorage.getItem(STORAGE_KEY_CLIENT_AUTH));
   });
+
+  // Notifications State with sound and persistence
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_NOTIFICATIONS);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error loading notifications', e);
+      }
+    }
+    return INITIAL_NOTIFICATIONS;
+  });
+
+  const [floatingToasts, setFloatingToasts] = useState<AppNotification[]>([]);
+
+  const dispatchNotification = (
+    type: NotificationType,
+    title: string,
+    message: string,
+    targetRoles: NotificationTargetRole[],
+    order?: Partial<VehicleServiceOrder>,
+    actionModule?: string
+  ) => {
+    const newNotif = createNotification(type, title, message, targetRoles, order, actionModule);
+
+    setNotifications((prev) => {
+      const updated = [newNotif, ...prev];
+      localStorage.setItem(STORAGE_KEY_NOTIFICATIONS, JSON.stringify(updated));
+      return updated;
+    });
+
+    const isCurrentRoleTarget =
+      targetRoles.includes('all') || (activeRole && targetRoles.includes(activeRole));
+
+    if (isCurrentRoleTarget) {
+      playNotificationBeep();
+      setFloatingToasts((prev) => [newNotif, ...prev.slice(0, 2)]);
+      setTimeout(() => {
+        setFloatingToasts((prev) => prev.filter((t) => t.id !== newNotif.id));
+      }, 6500);
+    }
+  };
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      localStorage.setItem(STORAGE_KEY_NOTIFICATIONS, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        !activeRole || n.targetRoles.includes(activeRole) || n.targetRoles.includes('all')
+          ? { ...n, read: true }
+          : n
+      );
+      localStorage.setItem(STORAGE_KEY_NOTIFICATIONS, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleClearAllNotifications = () => {
+    setNotifications((prev) => {
+      const remaining = activeRole
+        ? prev.filter((n) => !n.targetRoles.includes(activeRole) && !n.targetRoles.includes('all'))
+        : [];
+      localStorage.setItem(STORAGE_KEY_NOTIFICATIONS, JSON.stringify(remaining));
+      return remaining;
+    });
+  };
+
+  const handleSelectNotification = (notif: AppNotification) => {
+    if (notif.orderId) {
+      setSelectedOrderId(notif.orderId);
+    }
+    if (notif.actionModule) {
+      setActiveModule(notif.actionModule);
+    }
+  };
 
   // Escuchar parámetros de URL para acceso directo del cliente (Link de Monitoreo)
   useEffect(() => {
@@ -317,7 +410,86 @@ export default function App() {
   const currentOrder = orders.find((o) => o.id === selectedOrderId) || orders[0];
 
   const handleUpdateCurrentOrder = (updated: VehicleServiceOrder) => {
-    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+    const prevOrder = orders.find((o) => o.id === updated.id);
+
+    // 1. Cliente firma y autoriza reparación nueva o presupuesto -> notifica a Asesor y Mecánico
+    if (!prevOrder?.clientAuthorized && updated.clientAuthorized) {
+      dispatchNotification(
+        'quote_authorized',
+        'Presupuesto Autorizado por Cliente',
+        `El cliente ${updated.customer.name} autorizó y firmó formalmente las refacciones para ${updated.vehicle.make} ${updated.vehicle.model} (${updated.vehicle.plate}).`,
+        ['front_desk', 'mechanic'],
+        updated,
+        'm4_workshop'
+      );
+    }
+
+    // 2. Mecánico detecta falla nueva / agrega refacción con evidencia -> notifica a Asesor y Cliente
+    if (prevOrder && updated.parts.length > prevOrder.parts.length) {
+      const newPart = updated.parts[updated.parts.length - 1];
+      dispatchNotification(
+        'new_fault_detected',
+        'Nueva Falla Detectada en Taller',
+        `Mecánico registró falla imprevista: "${newPart?.name}". Requiere autorización y firma del cliente en expediente.`,
+        ['front_desk', 'client'],
+        updated,
+        'client_quote'
+      );
+    }
+
+    // 3. Jefe de taller / mecánico registra evidencias de inspección -> notifica a Cliente
+    if (
+      prevOrder &&
+      (updated.aestheticPhotos.length > prevOrder.aestheticPhotos.length ||
+        (updated.currentStep > prevOrder.currentStep && updated.currentStep <= 5))
+    ) {
+      dispatchNotification(
+        'inspection_progress',
+        'Inspección Técnica en Curso',
+        `El jefe de taller registró evidencias técnicas para tu ${updated.vehicle.make} ${updated.vehicle.model} (${updated.vehicle.plate}). Puedes consultar el avance en vivo.`,
+        ['client'],
+        updated,
+        'client_evidence'
+      );
+    }
+
+    // 4. Mecánico termina de reparar auto -> notifica a Cliente, Asesor y Administración
+    if (
+      prevOrder &&
+      !prevOrder.correctionsCompleted &&
+      updated.correctionsCompleted
+    ) {
+      dispatchNotification(
+        'repair_completed',
+        '¡Tu Auto Está Listo!',
+        `La reparación y prueba final de tu ${updated.vehicle.make} ${updated.vehicle.model} (${updated.vehicle.plate}) han concluido exitosamente en taller.`,
+        ['client'],
+        updated,
+        'client_live'
+      );
+      dispatchNotification(
+        'repair_completed',
+        'Auto Terminado en Bahía',
+        `${updated.vehicle.make} ${updated.vehicle.model} (${updated.vehicle.plate}) ha finalizado en taller. Listo para entrega al cliente.`,
+        ['front_desk'],
+        updated,
+        'advisor_registration'
+      );
+      dispatchNotification(
+        'repair_completed',
+        'Auto Terminado - Preparar Factura y Cobro',
+        `El mecánico concluyó servicio en ${updated.vehicle.make} ${updated.vehicle.model} (${updated.vehicle.plate}). Preparar CFDI y cobro en caja.`,
+        ['admin'],
+        updated,
+        'm5_billing'
+      );
+    }
+
+    setOrders((prev) => {
+      const next = prev.map((o) => (o.id === updated.id ? updated : o));
+      localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(next));
+      return next;
+    });
   };
 
   // Create new vehicle service order
@@ -430,6 +602,32 @@ export default function App() {
       actionLabel: 'Registro de Automóvil',
       description: `Ingreso de auto nuevo: ${newOrder.vehicle.make} ${newOrder.vehicle.model} (${newOrder.vehicle.plate})`,
     });
+
+    // Notificaciones automáticas a Mecánico, Cliente y Administración
+    dispatchNotification(
+      'vehicle_registered',
+      'Auto en Espera de Servicio',
+      `Asesor ingresó ${newOrder.vehicle.make} ${newOrder.vehicle.model} (${newOrder.vehicle.plate}). Esperando asignación en bahía e inspección técnica.`,
+      ['mechanic'],
+      newOrder,
+      'm2_inspection'
+    );
+    dispatchNotification(
+      'vehicle_registered',
+      'Tu Auto Ya Está en Taller',
+      `Bienvenido a Sr. Mecánico. Tu ${newOrder.vehicle.make} ${newOrder.vehicle.model} (${newOrder.vehicle.plate}) ha ingresado formalmente a servicio técnico.`,
+      ['client'],
+      newOrder,
+      'client_live'
+    );
+    dispatchNotification(
+      'vehicle_registered',
+      'Nuevo Ingreso a Taller Registrado',
+      `Asesor aperturó orden #${newOrder.orderNumber} para ${newOrder.vehicle.make} ${newOrder.vehicle.model} (${newOrder.vehicle.plate}). Preparar expediente administrativo.`,
+      ['admin'],
+      newOrder,
+      'm4_purchases'
+    );
   };
 
   // 1. Start Screen
@@ -440,11 +638,18 @@ export default function App() {
   // 2. Portal de Monitoreo del Cliente: Formulario de Acceso por Correo y Teléfono
   if (activeRole === 'client' && !isClientAuthenticated) {
     return (
-      <ClientLoginView
-        orders={orders}
-        onLoginSuccess={handleClientLoginSuccess}
-        onBackToRoles={handleLogout}
-      />
+      <>
+        <NotificationToastContainer
+          toasts={floatingToasts}
+          onDismiss={(id) => setFloatingToasts((prev) => prev.filter((t) => t.id !== id))}
+          onActionClick={handleSelectNotification}
+        />
+        <ClientLoginView
+          orders={orders}
+          onLoginSuccess={handleClientLoginSuccess}
+          onBackToRoles={handleLogout}
+        />
+      </>
     );
   }
 
@@ -457,7 +662,20 @@ export default function App() {
         onLogout={handleLogout}
         onToggleSidebar={activeRole !== 'client' ? () => setIsSidebarOpen(!isSidebarOpen) : undefined}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
+        onOpenManual={() => setActiveModule('role_manual')}
         activeOrderNumber={currentOrder?.orderNumber}
+        notifications={notifications}
+        onMarkNotificationAsRead={handleMarkNotificationAsRead}
+        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+        onClearAllNotifications={handleClearAllNotifications}
+        onSelectNotification={handleSelectNotification}
+      />
+
+      {/* Ventanas Flotantes de Notificaciones con Sonido Beep */}
+      <NotificationToastContainer
+        toasts={floatingToasts}
+        onDismiss={(id) => setFloatingToasts((prev) => prev.filter((t) => t.id !== id))}
+        onActionClick={handleSelectNotification}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0">
@@ -545,6 +763,7 @@ export default function App() {
               onLogout={handleClientLogout}
               activeModule={activeModule}
               onSelectModule={(mod) => setActiveModule(mod)}
+              notifications={notifications}
             />
           )}
 
@@ -597,6 +816,19 @@ export default function App() {
               orders={orders}
               defaultTab="crm"
             />
+          )}
+
+          {/* Entrega de Vehículo y Devolución de Piezas Usadas (Asesor / Paso 15) */}
+          {activeRole === 'front_desk' && activeModule === 'advisor_delivery' && currentOrder && (
+            <M5VehicleDelivery
+              order={currentOrder}
+              onUpdateOrder={handleUpdateCurrentOrder}
+            />
+          )}
+
+          {/* Módulo Oficial: Manual de Usuario por Rol y Manual Global Descargable */}
+          {(activeModule === 'role_manual' || activeModule === 'client_manual') && (
+            <UserManualModule activeRole={activeRole} />
           )}
         </main>
       </div>

@@ -12,6 +12,8 @@ import {
   MessageCircle,
   History,
   Camera,
+  BookOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { RoleId } from '../../types';
 
@@ -33,33 +35,36 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     switch (activeRole) {
       case 'front_desk':
         return [
-          { id: 'advisor_metrics', label: 'Métricas', icon: TrendingUp },
           { id: 'advisor_registration', label: 'Registro Auto', icon: ClipboardList },
-          { id: 'advisor_history', label: 'Historial PDF', icon: History },
+          { id: 'advisor_delivery', label: 'Entrega Auto', icon: CheckCircle2 },
+          { id: 'advisor_history', label: 'Historial', icon: History },
+          { id: 'role_manual', label: 'Manual', icon: BookOpen },
         ];
       case 'mechanic':
         return [
           { id: 'm2_inspection', label: '55 Puntos', icon: CheckSquare },
           { id: 'm4_workshop', label: 'Taller/Reloj', icon: Wrench },
           { id: 'linear_16_steps', label: '16 Pasos', icon: Workflow, isSpecial: true },
+          { id: 'role_manual', label: 'Manual', icon: BookOpen },
         ];
       case 'admin':
         return [
           { id: 'm4_purchases', label: 'Anti-Robo', icon: ShieldCheck },
           { id: 'm5_billing', label: 'Caja/CFDI', icon: Receipt },
-          { id: 'linear_16_steps', label: '16 Pasos', icon: Workflow, isSpecial: true },
+          { id: 'role_manual', label: 'Manual', icon: BookOpen },
         ];
       case 'director':
         return [
           { id: 'm6_crm_director', label: 'Productividad', icon: TrendingUp },
           { id: 'm6_crm_followup', label: 'CRM WhatsApp', icon: MessageCircle },
-          { id: 'linear_16_steps', label: '16 Pasos', icon: Workflow, isSpecial: true },
+          { id: 'role_manual', label: 'Manual', icon: BookOpen },
         ];
       case 'client':
         return [
           { id: 'client_live', label: 'Mi Auto', icon: Car },
           { id: 'client_quote', label: 'Cotización', icon: Calculator },
           { id: 'client_evidence', label: 'Fotos', icon: Camera },
+          { id: 'role_manual', label: 'Manual', icon: BookOpen },
         ];
     }
   };

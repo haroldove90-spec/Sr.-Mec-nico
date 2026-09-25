@@ -1,14 +1,22 @@
 import React from 'react';
-import { LogOut, UserCircle2, Menu, Sparkles } from 'lucide-react';
+import { LogOut, UserCircle2, Menu, Sparkles, BookOpen } from 'lucide-react';
 import { RoleId } from '../../types';
+import { AppNotification } from '../../types/notifications';
 import { PWAInstallButton } from './PWAInstallButton';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
   activeRole: RoleId;
   onLogout: () => void;
   onToggleSidebar?: () => void;
   onOpen16Steps?: () => void;
+  onOpenManual?: () => void;
   activeOrderNumber?: string;
+  notifications?: AppNotification[];
+  onMarkNotificationAsRead?: (id: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onClearAllNotifications?: () => void;
+  onSelectNotification?: (notification: AppNotification) => void;
 }
 
 const ROLE_DISPLAY_NAMES: Record<RoleId, string> = {
@@ -32,7 +40,13 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onToggleSidebar,
   onOpen16Steps,
+  onOpenManual,
   activeOrderNumber,
+  notifications = [],
+  onMarkNotificationAsRead = () => {},
+  onMarkAllNotificationsAsRead = () => {},
+  onClearAllNotifications = () => {},
+  onSelectNotification,
 }) => {
   return (
     <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -60,10 +74,10 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right Action Bar: Role, 16 Steps, PWA Install, Logout */}
+        {/* Right Action Bar: Role, 16 Steps, Notifications, Manual, PWA Install, Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) - solo para personal técnico de taller */}
-          {onOpen16Steps && activeRole !== 'client' && activeRole !== 'front_desk' && (
+          {/* Quick 16-Step Protocol Launcher (Desktop / Tablet) - EXCLUSIVO para Jefe de Taller / Mecánico */}
+          {onOpen16Steps && activeRole === 'mechanic' && (
             <button
               onClick={onOpen16Steps}
               className="hidden md:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-50 text-[#D05E28] border border-[#D05E28]/30 hover:bg-[#D05E28]/10 text-xs font-bold transition cursor-pointer"
@@ -73,6 +87,29 @@ export const Header: React.FC<HeaderProps> = ({
               <span>16 Pasos {activeOrderNumber ? `(${activeOrderNumber})` : ''}</span>
             </button>
           )}
+
+          {/* Botón Acceso Rápido al Manual de Usuario */}
+          {onOpenManual && (
+            <button
+              type="button"
+              onClick={onOpenManual}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 hover:border-[#D05E28]/40 hover:bg-amber-50/50 text-slate-700 hover:text-[#D05E28] text-xs font-bold transition cursor-pointer shrink-0"
+              title="Consultar Manual de Usuario del Rol"
+            >
+              <BookOpen className="w-4 h-4 text-[#D05E28]" />
+              <span className="hidden sm:inline">Manual</span>
+            </button>
+          )}
+
+          {/* Centro de Notificaciones con Sonido Beep (Activo para Asesor, Jefe de taller, Administración y Cliente) */}
+          <NotificationBell
+            activeRole={activeRole}
+            notifications={notifications}
+            onMarkAsRead={onMarkNotificationAsRead}
+            onMarkAllAsRead={onMarkAllNotificationsAsRead}
+            onClearAll={onClearAllNotifications}
+            onSelectNotification={onSelectNotification}
+          />
 
           {/* Identificación del Rol Activo (Adaptable a pantallas pequeñas) */}
           <div
