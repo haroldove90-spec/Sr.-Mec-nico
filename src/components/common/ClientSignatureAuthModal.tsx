@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { VehicleServiceOrder } from '../../types';
+import { getClientTrackingUrl, buildAuthorizedWhatsAppMessage } from '../../utils/trackingUrl';
 
 interface ClientSignatureAuthModalProps {
   isOpen: boolean;
@@ -39,7 +40,6 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
   const [signerName, setSignerName] = useState(order.customer.name || '');
   const [copiedLink, setCopiedLink] = useState(false);
   const [authorizedSuccess, setAuthorizedSuccess] = useState(false);
-  const [generatedTrackingUrl, setGeneratedTrackingUrl] = useState('');
 
   // Cálculos financieros
   const approvedParts = order.parts.filter((p) => p.approved);
@@ -49,10 +49,8 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
   const iva = subtotal * 0.16;
   const total = subtotal + iva;
 
-  // URL Personalizada para el Cliente (Producción Vercel + Parámetros de Autenticación)
-  const cleanPhone = order.customer.phone.replace(/\D/g, '');
-  const cleanEmail = encodeURIComponent(order.customer.email.trim().toLowerCase());
-  const trackingUrl = `https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${cleanPhone}&email=${cleanEmail}`;
+  // URL Personalizada para el Cliente (dinámica para desarrollo y producción Vercel)
+  const trackingUrl = getClientTrackingUrl(order);
 
   // Si la orden ya tiene firma guardada, cargarla en el canvas si existe
   useEffect(() => {
@@ -60,7 +58,6 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
       setSignerName(order.clientAuthSignerName || order.customer.name || '');
       setAuthorizedSuccess(false);
       setCopiedLink(false);
-      setGeneratedTrackingUrl(trackingUrl);
 
       setTimeout(() => {
         const canvas = canvasRef.current;
@@ -69,7 +66,8 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
         if (!ctx) return;
 
         // Ajustar resolución del canvas para evitar borrosidad en pantallas retina
-        canvas.width = canvas.parentElement?.clientWidth || 500;
+        const containerWidth = canvas.parentElement?.clientWidth || 500;
+        canvas.width = containerWidth;
         canvas.height = 180;
 
         ctx.strokeStyle = '#1A253B';
@@ -92,7 +90,23 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
     }
   }, [isOpen, order]);
 
-  // Dibujo táctil y ratón
+  const getCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    const scaleX = canvas.width / (rect.width || 1);
+    const scaleY = canvas.height / (rect.height || 1);
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  };
+
+  // Dibujo táctil y ratón responsivo
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
   ) => {
@@ -101,10 +115,7 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
+    const { x, y } = getCoordinates(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
     setIsDrawing(true);
@@ -120,10 +131,7 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
+    const { x, y } = getCoordinates(e);
     ctx.lineTo(x, y);
     ctx.stroke();
   };
@@ -143,33 +151,7 @@ export const ClientSignatureAuthModal: React.FC<ClientSignatureAuthModalProps> =
 
   // Enviar mensaje de WhatsApp con la orden firmada y el enlace de monitoreo
   const sendWhatsAppNotification = (url: string, signer: string) => {
-    const partsList = approvedParts
-      .map(
-        (p, idx) =>
-          `  ${idx + 1}. *${p.name}* - $${(p.cost + p.laborCost).toLocaleString('es-MX')} MXN`
-      )
-      .join('\n');
-
-    const message =
-      `📋 *ORDEN DE SERVICIO AUTORIZADA Y FIRMADA*\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `¡Hola ${order.customer.name}! Tu orden de servicio ha sido *formalmente autorizada y firmada* para ingresar a taller mecánico.\n\n` +
-      `📑 *Folio de Orden:* #${order.orderNumber}\n` +
-      `🚗 *Vehículo:* ${order.vehicle.year} ${order.vehicle.make} ${order.vehicle.model}\n` +
-      `🔢 *Placas:* ${order.vehicle.plate}\n` +
-      `👤 *Firmado por:* ${signer || order.customer.name}\n` +
-      `📅 *Fecha de Autorización:* ${new Date().toLocaleString('es-MX')}\n\n` +
-      `💰 *RESUMEN DE INVERSIÓN AUTORIZADA:*\n` +
-      `${partsList || '  • Mantenimiento y diagnóstico general'}\n` +
-      `*Total con IVA:* $${total.toLocaleString('es-MX', { maximumFractionDigits: 2 })} MXN\n` +
-      `🛡️ *Garantía del Taller:* 6 Meses o 10,000 km por escrito.\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🔴 *LINK PERSONALIZADO DE MONITOREO EN VIVO:*\n` +
-      `Puedes seguir paso a paso el estatus de tu auto en tiempo real, ver fotografías de las refacciones instaladas y pruebas de calidad aquí:\n\n` +
-      `👉 ${url}\n\n` +
-      `_Tus credenciales de acceso son tu correo (${order.customer.email}) y tu teléfono celular registrado (${order.customer.phone})._\n\n` +
-      `Cualquier duda estamos a tus órdenes en este chat. ¡Tu auto está en las mejores manos! 🔧🚗`;
-
+    const message = buildAuthorizedWhatsAppMessage(order, signer, url, total);
     const targetPhone = order.customer.phone.replace(/\D/g, '');
     const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');

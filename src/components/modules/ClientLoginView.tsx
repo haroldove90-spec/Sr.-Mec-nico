@@ -25,10 +25,34 @@ export const ClientLoginView: React.FC<ClientLoginViewProps> = ({
   onLoginSuccess,
   onBackToRoles,
 }) => {
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [orderNumber, setOrderNumber] = useState('');
-  const [loginMode, setLoginMode] = useState<'credentials' | 'orderNumber'>('credentials');
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('email') || p.get('correo') || '';
+    }
+    return '';
+  });
+  const [phone, setPhone] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('phone') || p.get('telefono') || '';
+    }
+    return '';
+  });
+  const [orderNumber, setOrderNumber] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('tracking') || p.get('orden') || p.get('order') || p.get('orderId') || '';
+    }
+    return '';
+  });
+  const [loginMode, setLoginMode] = useState<'credentials' | 'orderNumber'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('tracking') || p.get('orden') || p.get('order')) return 'orderNumber';
+    }
+    return 'credentials';
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [matchingOrders, setMatchingOrders] = useState<VehicleServiceOrder[]>([]);
 

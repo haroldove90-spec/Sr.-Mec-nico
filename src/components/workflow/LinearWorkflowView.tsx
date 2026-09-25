@@ -47,7 +47,6 @@ export const PROTOCOL_STEPS = [
   { step: 9, name: 'Evidencia de piezas instaladas', short: '9. Foto Nueva', icon: Camera },
   { step: 10, name: 'Prueba de manejo (Final)', short: '10. Prueba Fin.', icon: Car },
   { step: 11, name: 'Corrección y ajustes finales', short: '11. Ajustes', icon: Wrench },
-  { step: 12, name: 'Recorrido por el coche', short: '12. Recorrido', icon: Car },
   { step: 13, name: 'Cobro y facturación CFDI', short: '13. Cobro', icon: Receipt },
   { step: 14, name: 'Entrega de auto y firma digital', short: '14. Firma', icon: PenTool },
   { step: 15, name: 'Seguimiento a los 2 días', short: '15. CRM 2 Días', icon: MessageCircle },
@@ -60,10 +59,9 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
   orders,
   onBackToDashboard,
 }) => {
-  const currentStep = order.currentStep || 1;
+  const currentStep = order.currentStep === 12 ? 13 : order.currentStep || 1;
 
   const goToStep = (stepNumber: number) => {
-    if (stepNumber < 1 || stepNumber > 16) return;
     onUpdateOrder({
       ...order,
       currentStep: stepNumber,
@@ -77,24 +75,28 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
       origin: { y: 0.8 },
     });
 
-    if (currentStep < 16) {
+    const currentIndex = PROTOCOL_STEPS.findIndex((p) => p.step === currentStep);
+    if (currentIndex !== -1 && currentIndex < PROTOCOL_STEPS.length - 1) {
       onUpdateOrder({
         ...order,
-        currentStep: currentStep + 1,
+        currentStep: PROTOCOL_STEPS[currentIndex + 1].step,
       });
     }
   };
 
   const handlePrevStep = () => {
-    if (currentStep > 1) {
+    const currentIndex = PROTOCOL_STEPS.findIndex((p) => p.step === currentStep);
+    if (currentIndex > 0) {
       onUpdateOrder({
         ...order,
-        currentStep: currentStep - 1,
+        currentStep: PROTOCOL_STEPS[currentIndex - 1].step,
       });
     }
   };
 
-  const currentStepData = PROTOCOL_STEPS[currentStep - 1];
+  const currentStepData =
+    PROTOCOL_STEPS.find((p) => p.step === currentStep) || PROTOCOL_STEPS[0];
+  const currentStepIndex = PROTOCOL_STEPS.findIndex((p) => p.step === currentStep);
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-24">
@@ -106,7 +108,7 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
               Protocolo Lineal
             </span>
             <span className="text-sm font-mono font-bold text-slate-500">
-              Paso {currentStep} de 16
+              Paso {currentStepIndex !== -1 ? currentStepIndex + 1 : 1} de {PROTOCOL_STEPS.length}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A253B] tracking-tight">
@@ -259,13 +261,6 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
         )}
         {currentStep === 11 && (
           <M4WorkshopEvidence
-            order={order}
-            onUpdateOrder={onUpdateOrder}
-            onNextStep={handleNextStepAuto}
-          />
-        )}
-        {currentStep === 12 && (
-          <M5VehicleDelivery
             order={order}
             onUpdateOrder={onUpdateOrder}
             onNextStep={handleNextStepAuto}

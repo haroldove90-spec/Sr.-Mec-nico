@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Car,
   Clock,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { VehicleServiceOrder } from '../../types';
 import { ClientSignatureAuthModal } from '../common/ClientSignatureAuthModal';
+import { getClientTrackingUrl } from '../../utils/trackingUrl';
 
 interface ClientPortalProps {
   order: VehicleServiceOrder;
@@ -28,6 +29,8 @@ interface ClientPortalProps {
   orders: VehicleServiceOrder[];
   onSelectOrder: (orderId: string) => void;
   onLogout?: () => void;
+  activeModule?: string;
+  onSelectModule?: (moduleId: string) => void;
 }
 
 export const ClientPortal: React.FC<ClientPortalProps> = ({
@@ -36,8 +39,36 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   orders,
   onSelectOrder,
   onLogout,
+  activeModule,
+  onSelectModule,
 }) => {
-  const [activeTab, setActiveTab] = useState<'status' | 'quote' | 'evidence'>('status');
+  // Sincronización instantánea y reactiva entre la barra inferior (BottomNav) y el portal
+  const [activeTab, setActiveTab] = useState<'status' | 'quote' | 'evidence'>(() => {
+    if (activeModule === 'client_quote') return 'quote';
+    if (activeModule === 'client_evidence') return 'evidence';
+    return 'status';
+  });
+
+  useEffect(() => {
+    if (activeModule === 'client_quote') {
+      setActiveTab('quote');
+    } else if (activeModule === 'client_evidence') {
+      setActiveTab('evidence');
+    } else if (activeModule === 'client_live') {
+      setActiveTab('status');
+    }
+  }, [activeModule]);
+
+  const handleTabChange = (tab: 'status' | 'quote' | 'evidence') => {
+    setActiveTab(tab);
+    if (onSelectModule) {
+      const mod =
+        tab === 'quote' ? 'client_quote' : tab === 'evidence' ? 'client_evidence' : 'client_live';
+      onSelectModule(mod);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -69,10 +100,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
     setIsSignatureModalOpen(false);
   };
 
-  // URL Personalizada para el Cliente
-  const cleanPhone = order.customer.phone.replace(/\D/g, '');
-  const cleanEmail = encodeURIComponent(order.customer.email.trim().toLowerCase());
-  const trackingUrl = `https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${cleanPhone}&email=${cleanEmail}`;
+  // URL Personalizada para el Cliente (dinámica con origin actual y fallback)
+  const trackingUrl = getClientTrackingUrl(order);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(trackingUrl);
@@ -153,11 +182,11 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto pb-20">
+    <div className="space-y-6 sm:space-y-8 max-w-5xl mx-auto pb-32 sm:pb-36 lg:pb-16 px-1 sm:px-0">
       {/* Header del Portal del Cliente */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-black uppercase tracking-wider text-[#D05E28] bg-[#D05E28]/10 px-2.5 py-0.5 rounded-full border border-[#D05E28]/20">
               Portal Oficial de Monitoreo
             </span>
@@ -173,7 +202,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Si hay más autos para cambiar de vehículo */}
           {orders.length > 1 && (
             <div className="flex items-center gap-2">
@@ -285,11 +314,11 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={handleCopyLink}
-              className="px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+              className="px-3.5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition shrink-0"
               title="Copiar link de seguimiento para guardar o compartir"
             >
               {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -299,7 +328,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
             <button
               type="button"
               onClick={handleContactAdvisor}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition cursor-pointer shadow-xs"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition cursor-pointer shadow-xs"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Consultar Asesor (WhatsApp)</span>
@@ -338,37 +367,46 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({
         </div>
       )}
 
-      {/* Navegación por Pestañas del Cliente */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      {/* Navegación por Pestañas del Cliente (Sincronizada con la barra inferior) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar py-1">
         <button
-          onClick={() => setActiveTab('status')}
-          className={`px-5 py-2.5 rounded-2xl text-sm sm:text-base font-bold transition cursor-pointer ${
+          type="button"
+          onClick={() => handleTabChange('status')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-base font-bold transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'status'
               ? 'bg-[#1A253B] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 hover:bg-slate-100 bg-white border border-slate-200'
           }`}
         >
           Resumen y Falla
         </button>
         <button
-          onClick={() => setActiveTab('quote')}
-          className={`px-5 py-2.5 rounded-2xl text-sm sm:text-base font-bold transition cursor-pointer flex items-center gap-2 ${
+          type="button"
+          onClick={() => handleTabChange('quote')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-base font-bold transition cursor-pointer shrink-0 whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'quote'
               ? 'bg-[#D05E28] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 hover:bg-slate-100 bg-white border border-slate-200'
           }`}
         >
           <span>Presupuesto y Piezas</span>
-          <span className="px-2 py-0.5 rounded-full text-xs bg-white text-[#D05E28] font-black">
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-black ${
+              activeTab === 'quote'
+                ? 'bg-white text-[#D05E28]'
+                : 'bg-[#D05E28]/10 text-[#D05E28]'
+            }`}
+          >
             {approvedParts.length}
           </span>
         </button>
         <button
-          onClick={() => setActiveTab('evidence')}
-          className={`px-5 py-2.5 rounded-2xl text-sm sm:text-base font-bold transition cursor-pointer ${
+          type="button"
+          onClick={() => handleTabChange('evidence')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-base font-bold transition cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === 'evidence'
               ? 'bg-[#1A253B] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
+              : 'text-slate-600 hover:bg-slate-100 bg-white border border-slate-200'
           }`}
         >
           Fotos de Recepción ({order.aestheticPhotos.length})

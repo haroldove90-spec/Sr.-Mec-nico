@@ -11,6 +11,7 @@ import {
   Workflow,
   MessageCircle,
   History,
+  Camera,
 } from 'lucide-react';
 import { RoleId } from '../../types';
 
@@ -58,7 +59,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         return [
           { id: 'client_live', label: 'Mi Auto', icon: Car },
           { id: 'client_quote', label: 'Cotización', icon: Calculator },
-          { id: 'client_evidence', label: 'Fotos', icon: ClipboardList },
+          { id: 'client_evidence', label: 'Fotos', icon: Camera },
         ];
     }
   };
@@ -66,16 +67,21 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const navItems = getNavItems();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 shadow-lg pb-safe">
-      <div className="flex items-center justify-around max-w-lg mx-auto">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl pb-safe">
+      <div className="flex items-center justify-around max-w-lg mx-auto h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            item.isSpecial ? activeModule === 'linear_16_steps' : activeModule === item.id;
+          const isActive = item.isSpecial
+            ? activeModule === 'linear_16_steps'
+            : activeModule === item.id ||
+              (activeRole === 'client' &&
+                item.id === 'client_live' &&
+                (!activeModule || activeModule === 'client' || !activeModule.startsWith('client_')));
 
           return (
             <button
               key={item.id}
+              type="button"
               onClick={() => {
                 if (item.isSpecial) {
                   onOpen16Steps();
@@ -83,20 +89,20 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   onSelectModule(item.id);
                 }
               }}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
+              className={`flex-1 h-full flex flex-col items-center justify-center py-1 px-1 transition-all cursor-pointer touch-manipulation select-none active:scale-95 ${
                 isActive
-                  ? 'text-[#D05E28] font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'text-[#D05E28] font-black'
+                  : 'text-slate-500 hover:text-slate-800 font-semibold'
               }`}
             >
               <div
-                className={`p-1.5 rounded-lg transition-colors ${
-                  isActive ? 'bg-[#D05E28]/10 text-[#D05E28]' : ''
+                className={`p-1.5 rounded-xl transition-colors ${
+                  isActive ? 'bg-[#D05E28]/15 text-[#D05E28]' : 'text-slate-500'
                 }`}
               >
                 <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <span className="text-xs sm:text-sm mt-0.5 font-semibold">
+              <span className="text-[11px] sm:text-xs mt-0.5 font-bold leading-tight">
                 {item.label}
               </span>
             </button>

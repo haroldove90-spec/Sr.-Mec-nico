@@ -137,7 +137,7 @@ export const M5VehicleDelivery: React.FC<M5VehicleDeliveryProps> = ({
             Entrega de Vehículo y Firma Digital
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-1">
-            Recorrido físico de niveles y firma de conformidad de refacciones usadas.
+            Verificación de niveles y firma de conformidad de refacciones usadas.
           </p>
         </div>
 
@@ -162,11 +162,11 @@ export const M5VehicleDelivery: React.FC<M5VehicleDeliveryProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        {/* 1. Recorrido Físico de Entrega */}
+        {/* 1. Verificación Física de Entrega */}
         <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
             <Car className="w-5 h-5 text-[#D05E28]" />
-            <h3 className="font-bold text-lg text-[#1A253B]">Recorrido con el Cliente</h3>
+            <h3 className="font-bold text-lg text-[#1A253B]">Verificación de Niveles y Piezas</h3>
           </div>
 
           <div className="space-y-4 text-sm sm:text-base">

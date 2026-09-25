@@ -42,6 +42,7 @@ import {
 import { CameraCaptureModal } from '../../common/CameraCaptureModal';
 import { ClientSignatureAuthModal } from '../../common/ClientSignatureAuthModal';
 import { M2DiagnosisTechnical } from '../M2DiagnosisTechnical';
+import { getClientTrackingUrl } from '../../../utils/trackingUrl';
 
 interface AdvisorRegistrationFlowProps {
   order: VehicleServiceOrder;
@@ -50,7 +51,7 @@ interface AdvisorRegistrationFlowProps {
   onRecordMovement?: (movement: Omit<AdvisorMovement, 'id' | 'timestamp'>) => void;
 }
 
-type AdvisorStep = 1 | 2 | 5 | 6 | 7 | 12 | 14;
+type AdvisorStep = 1 | 2 | 5 | 6 | 7 | 14;
 
 const ADVISOR_STEPS_CONFIG = [
   { step: 1 as AdvisorStep, label: 'Paso 1: Datos e Inventario', short: '1. Registro e Inventario' },
@@ -58,7 +59,6 @@ const ADVISOR_STEPS_CONFIG = [
   { step: 5 as AdvisorStep, label: 'Paso 5: Diagnóstico y Evidencias', short: '5. Diagnóstico' },
   { step: 6 as AdvisorStep, label: 'Paso 6: Cotización de lo Urgente', short: '6. Cotización' },
   { step: 7 as AdvisorStep, label: 'Paso 7: Autorización del Cliente', short: '7. Autorización' },
-  { step: 12 as AdvisorStep, label: 'Paso 12: Recorrido por el Coche', short: '12. Recorrido' },
   { step: 14 as AdvisorStep, label: 'Paso 14: Entrega de Auto', short: '14. Entrega' },
 ];
 
@@ -226,15 +226,6 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
     laborCost: 0,
     urgency: 'urgente',
     damagedPhotoUrl: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80',
-  });
-
-  // Step 12: Walk around checks
-  const [walkAroundLevels, setWalkAroundLevels] = useState({
-    oilLevel: true,
-    coolantLevel: true,
-    brakeFluidLevel: true,
-    aestheticOk: true,
-    usedPartsHandedOver: order.oldPartsReturned,
   });
 
   // Step 14: Signature canvas
@@ -575,27 +566,6 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
     });
 
     setShowAuthSignatureModal(false);
-  };
-
-  // Paso 12: Recorrido Guardado
-  const handleSaveWalkAround = () => {
-    onUpdateOrder({
-      ...order,
-      walkAroundCompleted: true,
-      oldPartsReturned: walkAroundLevels.usedPartsHandedOver,
-      currentStep: Math.max(order.currentStep, 12),
-    });
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
-
-    onRecordMovement?.({
-      orderNumber: order.orderNumber,
-      plate: order.vehicle.plate,
-      customerName: order.customer.name,
-      action: 'recorrido_coche',
-      actionLabel: 'Recorrido Físico de Niveles',
-      description: `Recorrido con cliente completado. Niveles verificados y piezas usadas entregadas.`,
-    });
   };
 
   // Paso 14: Firma Digital y Entrega
@@ -1954,22 +1924,23 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
                     <span>Ver o Cambiar Firma</span>
                   </button>
 
-                  <a
-                    href={`https://wa.me/${order.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                      `Hola ${order.customer.name}, te confirmamos que tu orden #${order.orderNumber} para tu ${order.vehicle.make} ${order.vehicle.model} está en taller. Puedes seguir el avance en vivo aquí: https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${order.customer.phone.replace(/\D/g, '')}&email=${encodeURIComponent(order.customer.email)}`
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const link = getClientTrackingUrl(order);
+                      const msg = `Hola ${order.customer.name}, te confirmamos que tu orden #${order.orderNumber} para tu ${order.vehicle.make} ${order.vehicle.model} está en taller. Puedes seguir el avance en vivo aquí: ${link}`;
+                      window.open(`https://wa.me/${order.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
                     className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span>Reenviar WhatsApp con Link de Monitoreo</span>
-                  </a>
+                  </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      const link = `https://sr-mec-nico.vercel.app/?tracking=${order.orderNumber}&phone=${order.customer.phone.replace(/\D/g, '')}&email=${encodeURIComponent(order.customer.email)}`;
+                      const link = getClientTrackingUrl(order);
                       navigator.clipboard.writeText(link);
                       alert('¡Enlace de monitoreo del cliente copiado al portapapeles!');
                     }}
@@ -2025,76 +1996,6 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentAdvisorStep(12)}
-                className="px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm sm:text-base flex items-center gap-2 cursor-pointer shadow-xs"
-              >
-                <span>Avanzar al Paso 12: Recorrido</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PASO 12: Recorrido por el coche con el cliente mostrando niveles y cambios */}
-      {currentAdvisorStep === 12 && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="font-bold text-xl text-[#1A253B] flex items-center gap-2.5">
-                  <Car className="w-5 h-5 text-[#D05E28]" />
-                  <span>Paso 12: Recorrido por el Coche con el Cliente</span>
-                </h3>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Muestra física de niveles, tapones cerrados y entrega de piezas reemplazadas en taller.
-                </p>
-              </div>
-
-              <button
-                onClick={handleSaveWalkAround}
-                className="px-5 py-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white font-bold text-sm cursor-pointer shadow-xs"
-              >
-                Guardar Recorrido
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                { key: 'oilLevel', label: 'Nivel de aceite en bayoneta máxima y tapón apretado' },
-                { key: 'coolantLevel', label: 'Nivel de anticongelante y depósito presurizado cerrado' },
-                { key: 'brakeFluidLevel', label: 'Líquido de frenos purgado y nivel adecuado' },
-                { key: 'aestheticOk', label: 'Carrocería sin rayones nuevos respecto al inventario de recepción' },
-                { key: 'usedPartsHandedOver', label: 'Entrega física en bolsa de las piezas usadas reemplazadas' },
-              ].map((item) => (
-                <label
-                  key={item.key}
-                  className="flex items-center gap-3.5 p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white transition cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={(walkAroundLevels as any)[item.key]}
-                    onChange={(e) =>
-                      setWalkAroundLevels({
-                        ...walkAroundLevels,
-                        [item.key]: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 accent-[#D05E28]"
-                  />
-                  <span className="text-base font-semibold text-[#1A253B]">{item.label}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              <button
-                onClick={() => setCurrentAdvisorStep(7)}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
-              >
-                Volver al Paso 7
-              </button>
-              <button
                 onClick={() => setCurrentAdvisorStep(14)}
                 className="px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm sm:text-base flex items-center gap-2 cursor-pointer shadow-xs"
               >
@@ -2146,7 +2047,7 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
                 <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2 text-sm text-slate-700">
                   <strong className="text-amber-950 block">Declaración de Entrega:</strong>
                   <p>
-                    El cliente manifiesta haber recibido su vehículo a entera satisfacción, con recorrido físico verificado y recepción física de sus piezas usadas sustituidas en el taller.
+                    El cliente manifiesta haber recibido su vehículo a entera satisfacción y recepción física de sus piezas usadas sustituidas en el taller.
                   </p>
                 </div>
               </div>
@@ -2190,10 +2091,10 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               <button
-                onClick={() => setCurrentAdvisorStep(12)}
+                onClick={() => setCurrentAdvisorStep(7)}
                 className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
               >
-                Volver al Paso 12
+                Volver al Paso 7
               </button>
 
               <button

@@ -94,12 +94,29 @@ const INITIAL_ADVISOR_MOVEMENTS: AdvisorMovement[] = [
 ];
 
 export default function App() {
+  // Detectar si el usuario ingresó por un link de cliente directo
+  const isDirectClientLink = typeof window !== 'undefined' && Boolean(
+    new URLSearchParams(window.location.search).get('role') === 'client' ||
+    new URLSearchParams(window.location.search).get('tracking') ||
+    new URLSearchParams(window.location.search).get('orderId') ||
+    new URLSearchParams(window.location.search).get('phone') ||
+    new URLSearchParams(window.location.search).get('email')
+  );
+
   const [activeRole, setActiveRole] = useState<RoleId | null>(() => {
+    if (isDirectClientLink) {
+      return 'client';
+    }
     const saved = localStorage.getItem(STORAGE_KEY_ROLE);
     return saved ? (saved as RoleId) : null;
   });
 
-  const [activeModule, setActiveModule] = useState<string>('advisor_registration');
+  const [activeModule, setActiveModule] = useState<string>(() => {
+    if (isDirectClientLink) {
+      return 'client_live';
+    }
+    return 'advisor_registration';
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Orders State with localStorage persistence
@@ -121,6 +138,9 @@ export default function App() {
 
   // Client Authentication State
   const [isClientAuthenticated, setIsClientAuthenticated] = useState<boolean>(() => {
+    if (isDirectClientLink) {
+      return true;
+    }
     return Boolean(localStorage.getItem(STORAGE_KEY_CLIENT_AUTH));
   });
 
@@ -128,37 +148,77 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tracking = params.get('tracking') || params.get('orden') || params.get('order');
+    const orderId = params.get('orderId');
     const phone = params.get('phone') || params.get('telefono') || params.get('auth');
     const email = params.get('email') || params.get('correo');
+    const plate = params.get('plate');
+    const name = params.get('name');
+    const make = params.get('make');
+    const model = params.get('model');
+    const year = params.get('year');
+    const roleParam = params.get('role');
 
-    if (tracking || phone || email) {
+    if (roleParam === 'client' || tracking || orderId || phone || email) {
+      setActiveRole('client');
+      setIsClientAuthenticated(true);
+      localStorage.setItem(STORAGE_KEY_ROLE, 'client');
+      setActiveModule((prev) => (prev && prev.startsWith('client_') ? prev : 'client_live'));
+
       const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
       const cleanEmail = email ? email.trim().toLowerCase() : '';
       const cleanTracking = tracking ? tracking.trim().toUpperCase() : '';
+      const cleanOrderId = orderId ? orderId.trim().toLowerCase() : '';
+      const cleanPlate = plate ? plate.trim().toUpperCase() : '';
 
+      // 1. Buscar coincidencia exacta en las órdenes
       const matched = orders.find((o) => {
-        if (cleanTracking && (o.orderNumber.toUpperCase() === cleanTracking || o.id === cleanTracking)) {
-          return true;
-        }
+        if (cleanOrderId && o.id.toLowerCase() === cleanOrderId) return true;
+        if (cleanTracking && (o.orderNumber.toUpperCase() === cleanTracking || o.id.toUpperCase() === cleanTracking)) return true;
+        if (cleanPlate && o.vehicle.plate.toUpperCase() === cleanPlate) return true;
         const oPhone = o.customer.phone.replace(/\D/g, '');
         const oEmail = o.customer.email.trim().toLowerCase();
-        if (cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone))) {
-          return true;
-        }
-        if (cleanEmail && oEmail === cleanEmail) {
-          return true;
-        }
+        if (cleanPhone && cleanPhone.length >= 7 && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone))) return true;
+        if (cleanEmail && oEmail === cleanEmail) return true;
         return false;
       });
 
       if (matched) {
         setSelectedOrderId(matched.id);
-        setActiveRole('client');
-        setActiveModule('client_live');
-        setIsClientAuthenticated(true);
-        localStorage.setItem(STORAGE_KEY_ROLE, 'client');
-        localStorage.setItem(STORAGE_KEY_MODULE, 'client_live');
         localStorage.setItem(STORAGE_KEY_CLIENT_AUTH, matched.id);
+      } else if (cleanTracking || cleanOrderId || cleanPlate || (name && (cleanPhone || cleanEmail))) {
+        // Enlace abierto en otro dispositivo/navegador: hidratamos la orden
+        const template = orders[0] || INITIAL_ORDERS[0];
+        const newSynthesizedOrder: VehicleServiceOrder = {
+          ...template,
+          id: cleanOrderId || `ord-${cleanTracking || Date.now()}`,
+          orderNumber: cleanTracking || `SM-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          customer: {
+            ...template.customer,
+            name: name ? decodeURIComponent(name) : template.customer.name,
+            phone: phone || template.customer.phone,
+            email: email ? decodeURIComponent(email) : template.customer.email,
+          },
+          vehicle: {
+            ...template.vehicle,
+            plate: cleanPlate || template.vehicle.plate,
+            make: make ? decodeURIComponent(make) : template.vehicle.make,
+            model: model ? decodeURIComponent(model) : template.vehicle.model,
+            year: year ? parseInt(year, 10) || template.vehicle.year : template.vehicle.year,
+          },
+        };
+
+        setOrders((prev) => {
+          const exists = prev.some((o) => o.id === newSynthesizedOrder.id || o.orderNumber === newSynthesizedOrder.orderNumber);
+          if (exists) return prev;
+          const updated = [newSynthesizedOrder, ...prev];
+          localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(updated));
+          return updated;
+        });
+        setSelectedOrderId(newSynthesizedOrder.id);
+        localStorage.setItem(STORAGE_KEY_CLIENT_AUTH, newSynthesizedOrder.id);
+      } else if (orders.length > 0) {
+        setSelectedOrderId(orders[0].id);
+        localStorage.setItem(STORAGE_KEY_CLIENT_AUTH, orders[0].id);
       }
     }
   }, [orders]);
@@ -395,28 +455,34 @@ export default function App() {
       <Header
         activeRole={activeRole}
         onLogout={handleLogout}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggleSidebar={activeRole !== 'client' ? () => setIsSidebarOpen(!isSidebarOpen) : undefined}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
         activeOrderNumber={currentOrder?.orderNumber}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0">
-        {/* Desktop Collapsible Sidebar */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          activeRole={activeRole}
-          activeModule={activeModule}
-          onSelectModule={(mod) => setActiveModule(mod)}
-          orders={orders}
-          selectedOrderId={selectedOrderId}
-          onSelectOrder={(id) => setSelectedOrderId(id)}
-          onNewOrder={handleCreateNewOrder}
-          onOpen16Steps={() => setActiveModule('linear_16_steps')}
-        />
+        {/* Desktop Collapsible Sidebar (Solo para personal del taller, no para clientes) */}
+        {activeRole !== 'client' && (
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            activeRole={activeRole}
+            activeModule={activeModule}
+            onSelectModule={(mod) => setActiveModule(mod)}
+            orders={orders}
+            selectedOrderId={selectedOrderId}
+            onSelectOrder={(id) => setSelectedOrderId(id)}
+            onNewOrder={handleCreateNewOrder}
+            onOpen16Steps={() => setActiveModule('linear_16_steps')}
+          />
+        )}
 
         {/* Main Content Area */}
-        <main className="flex-1 min-w-0 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-80 pb-24 lg:pb-12">
+        <main
+          className={`flex-1 min-w-0 w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-12 ${
+            activeRole === 'client' ? 'max-w-5xl mx-auto' : 'lg:ml-80'
+          }`}
+        >
           {/* Módulos Específicos del Rol: Recepción y Asesor */}
           {activeRole === 'front_desk' && activeModule === 'advisor_metrics' && (
             <AdvisorMetrics orders={orders} movements={advisorMovements} />
@@ -477,6 +543,8 @@ export default function App() {
               orders={orders}
               onSelectOrder={(id) => setSelectedOrderId(id)}
               onLogout={handleClientLogout}
+              activeModule={activeModule}
+              onSelectModule={(mod) => setActiveModule(mod)}
             />
           )}
 
@@ -537,7 +605,11 @@ export default function App() {
       <BottomNav
         activeRole={activeRole}
         activeModule={activeModule}
-        onSelectModule={(mod) => setActiveModule(mod)}
+        onSelectModule={(mod) => {
+          setActiveModule(mod);
+          localStorage.setItem(STORAGE_KEY_MODULE, mod);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
       />
     </div>
