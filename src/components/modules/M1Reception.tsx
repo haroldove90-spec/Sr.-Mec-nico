@@ -207,6 +207,26 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
     }
   };
 
+  const handleUploadPhotoFile = (view: AestheticPhoto['view'], label: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const newPhoto: AestheticPhoto = {
+          view,
+          label,
+          url: reader.result,
+          timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        };
+        const updatedPhotos = [...order.aestheticPhotos.filter((p) => p.view !== view), newPhoto];
+        onUpdateOrder({
+          ...order,
+          aestheticPhotos: updatedPhotos,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAddAestheticPhoto = (view: AestheticPhoto['view'], label: string) => {
     const sampleUrls: Record<string, string> = {
       frontal: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
@@ -1205,18 +1225,38 @@ export const M1Reception: React.FC<M1ReceptionProps> = ({
                     </div>
                   )}
 
-                  <button
-                    onClick={() => handleAddAestheticPhoto(item.view, item.label)}
-                    className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center text-white transition text-sm font-bold gap-1.5 cursor-pointer"
+                  <label
+                    title="Tomar foto con cámara del celular o subir archivo sin pedir permisos"
+                    className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex flex-col items-center justify-center text-white transition text-xs font-bold gap-1 cursor-pointer p-2"
                   >
-                    <Upload className="w-4 h-4" />
-                    <span>{photo ? 'Cambiar' : 'Subir'}</span>
-                  </button>
+                    <Upload className="w-5 h-5" />
+                    <span>{photo ? 'Cambiar Foto' : 'Tomar / Subir'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadPhotoFile(item.view, item.label, file);
+                      }}
+                    />
+                  </label>
                 </div>
 
-                <div className="p-3 bg-white flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#1A253B]">{item.label}</span>
-                  {photo && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                <div className="p-3 bg-white flex items-center justify-between gap-1">
+                  <span className="text-xs font-bold text-[#1A253B] truncate">{item.label}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleAddAestheticPhoto(item.view, item.label)}
+                      title="Cargar foto de prueba rápida"
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold cursor-pointer"
+                    >
+                      Demo
+                    </button>
+                    {photo && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                  </div>
                 </div>
               </div>
             );

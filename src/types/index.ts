@@ -25,6 +25,18 @@ export interface AestheticPhoto {
   timestamp: string;
 }
 
+export interface TechnicalDiagnosisRecord {
+  summary: string;
+  severity: 'leve' | 'moderado' | 'urgente' | 'critico';
+  affectedSystems: string[];
+  dtcCodes?: string;
+  testsPerformed?: string[];
+  rootCause?: string;
+  recommendations?: string;
+  diagnosedBy?: string;
+  diagnosedAt?: string;
+}
+
 export interface DamagedPart {
   id: string;
   name: string;
@@ -160,6 +172,7 @@ export interface VehicleServiceOrder {
   // Step 5 & 6 & 7: Parts & Diagnosis
   parts: DamagedPart[];
   diagnosisSummary: string;
+  technicalDiagnosis?: TechnicalDiagnosisRecord;
   clientAuthorized: boolean;
   clientAuthTimestamp?: string;
 

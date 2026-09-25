@@ -37,6 +37,7 @@ import {
   VehicleIntakeInventory,
 } from '../../../types';
 import { CameraCaptureModal } from '../../common/CameraCaptureModal';
+import { M2DiagnosisTechnical } from '../M2DiagnosisTechnical';
 
 interface AdvisorRegistrationFlowProps {
   order: VehicleServiceOrder;
@@ -57,6 +58,57 @@ const ADVISOR_STEPS_CONFIG = [
   { step: 14 as AdvisorStep, label: 'Paso 14: Entrega de Auto', short: '14. Entrega' },
 ];
 
+const SAMPLE_AESTHETIC_PHOTOS: Record<string, string> = {
+  frontal: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
+  trasera: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+  lateral_izq: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80',
+  lateral_der: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80',
+  odometro_gas: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80',
+};
+
+const DIAGNOSIS_PRESETS = [
+  {
+    id: 'frenos',
+    title: 'Frenos Desgastados',
+    severity: 'urgente' as const,
+    systems: ['Frenos'],
+    summary: 'Desgaste crítico en pastillas de freno delanteras (menos de 3mm de vida útil restante). Discos con ceja pronunciada y cristalización. Requiere rectificado y cambio de pastillas cerámicas.',
+    recommendation: 'Recomendamos autorizar cambio de balatas y rectificado para garantizar distancia de frenado segura y evitar dañar los discos.',
+  },
+  {
+    id: 'afinacion',
+    title: 'Afinación Mayor Preventiva',
+    severity: 'preventivo' as const,
+    systems: ['Motor'],
+    summary: 'Servicio de afinación mayor preventiva: bujías con carbón en electrodos, filtro de aire saturado de impurezas y aceite de motor degradado con viscosidad reducida.',
+    recommendation: 'Realizar servicio de afinación completa: aceite sintético 5W-30, filtro de aceite, filtro de aire y bujías de platino.',
+  },
+  {
+    id: 'suspension',
+    title: 'Suspensión y Dirección',
+    severity: 'urgente' as const,
+    systems: ['Suspensión', 'Dirección'],
+    summary: 'Juego excesivo en terminales de dirección exteriores y bujes de horquilla cuarteados. Provoca vibración en volante a más de 80 km/h y desgaste disparejo en llantas.',
+    recommendation: 'Reemplazo de terminales y bujes con posterior alineación y balanceo computarizado.',
+  },
+  {
+    id: 'anticongelante',
+    title: 'Fuga de Anticongelante',
+    severity: 'critico' as const,
+    systems: ['Enfriamiento', 'Motor'],
+    summary: 'Fuga activa de refrigerante en manguera superior de radiador y nivel en depósito de reserva peligrosamente por debajo del mínimo.',
+    recommendation: 'No circular trayectos largos hasta sustituir manguera y purgar sistema para evitar sobrecalentamiento del motor.',
+  },
+  {
+    id: 'bateria',
+    title: 'Batería y Carga',
+    severity: 'urgente' as const,
+    systems: ['Eléctrico'],
+    summary: 'Batería con bajo voltaje de reposo (11.8V) y 45% de capacidad de arranque en frío (CCA). Bornes con sulfatación moderada.',
+    recommendation: 'Sustitución preventiva de acumulador para evitar fallas de encendido.',
+  },
+];
+
 export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = ({
   order,
   onUpdateOrder,
@@ -67,6 +119,16 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [activePhotoView, setActivePhotoView] = useState<{ view: AestheticPhoto['view']; label: string } | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Step 5: Formulario Editable de Diagnóstico Manual
+  const [diagnosisData, setDiagnosisData] = useState({
+    summary: order.diagnosisSummary || 'Desgaste crítico detectado en balatas y discos de freno delanteros.',
+    severity: 'urgente' as 'preventivo' | 'urgente' | 'critico',
+    recommendation: 'Recomendamos autorizar el reemplazo de pastillas cerámicas y rectificado antes de salir a carretera.',
+    affectedSystems: ['Frenos', 'Suspensión'] as string[],
+    technicianName: 'Carlos Mendoza Ruiz',
+  });
+  const [diagnosisSavedSuccess, setDiagnosisSavedSuccess] = useState(false);
 
   // Form State for Step 1: Client & Vehicle
   const [formData, setFormData] = useState({
@@ -300,22 +362,138 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
     });
   };
 
-  // Paso 5: Enviar diagnóstico por WhatsApp al cliente
-  const handleSendDiagnosisWhatsApp = () => {
-    const cleanPhone = (order.customer.fiscalData.whatsapp || order.customer.phone).replace(/\D/g, '');
-    const message = encodeURIComponent(
-      `Hola ${order.customer.name}, te saluda tu Asesor de Servicio de Sr. Mecánico. Ya concluimos la inspección de tu ${order.vehicle.make} ${order.vehicle.model} (${order.vehicle.plate}).\n\nDiagnóstico Técnico:\n${order.diagnosisSummary || 'Se identificaron componentes con desgaste crítico.'}\n\nPuedes autorizar tus refacciones en tu portal en vivo.`
-    );
-    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  // Captura directa desde archivo o cámara nativa sin pedir permisos
+  const handleDirectFileCapture = (view: AestheticPhoto['view'], label: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const newPhoto: AestheticPhoto = {
+          view,
+          label,
+          url: reader.result,
+          timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        const updatedPhotos = [
+          ...order.aestheticPhotos.filter((p) => p.view !== view),
+          newPhoto,
+        ];
+
+        onUpdateOrder({
+          ...order,
+          aestheticPhotos: updatedPhotos,
+          currentStep: Math.max(order.currentStep, 2),
+        });
+
+        onRecordMovement?.({
+          orderNumber: order.orderNumber,
+          plate: order.vehicle.plate,
+          customerName: order.customer.name,
+          action: 'fotos_esteticas',
+          actionLabel: 'Foto Capturada',
+          description: `Foto agregada directamente: ${label}`,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Cargar foto de demostración inmediata con 1 clic
+  const handleUseSamplePhotoDirectly = (view: AestheticPhoto['view'], label: string) => {
+    const sampleUrl = SAMPLE_AESTHETIC_PHOTOS[view] || SAMPLE_AESTHETIC_PHOTOS.frontal;
+    const newPhoto: AestheticPhoto = {
+      view,
+      label,
+      url: sampleUrl,
+      timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    const updatedPhotos = [
+      ...order.aestheticPhotos.filter((p) => p.view !== view),
+      newPhoto,
+    ];
+
+    onUpdateOrder({
+      ...order,
+      aestheticPhotos: updatedPhotos,
+      currentStep: Math.max(order.currentStep, 2),
+    });
+
+    onRecordMovement?.({
+      orderNumber: order.orderNumber,
+      plate: order.vehicle.plate,
+      customerName: order.customer.name,
+      action: 'fotos_esteticas',
+      actionLabel: 'Foto de Inspección Agregada',
+      description: `Foto de inspección asignada: ${label}`,
+    });
+  };
+
+  // Paso 5: Guardar Diagnóstico Manual del Admin / Asesor
+  const handleSaveDiagnosis = () => {
+    onUpdateOrder({
+      ...order,
+      diagnosisSummary: diagnosisData.summary,
+      currentStep: Math.max(order.currentStep, 5),
+    });
+    setDiagnosisSavedSuccess(true);
+    setTimeout(() => setDiagnosisSavedSuccess(false), 2500);
 
     onRecordMovement?.({
       orderNumber: order.orderNumber,
       plate: order.vehicle.plate,
       customerName: order.customer.name,
       action: 'diagnostico_entregado',
-      actionLabel: 'Diagnóstico Entregado',
-      description: `Diagnóstico y evidencias compartidas con el cliente vía WhatsApp.`,
+      actionLabel: 'Diagnóstico Técnico Registrado',
+      description: `Dictamen técnico registrado: ${diagnosisData.summary.slice(0, 60)}... (${diagnosisData.severity})`,
     });
+  };
+
+  const handleApplyDiagnosisPreset = (preset: (typeof DIAGNOSIS_PRESETS)[0]) => {
+    setDiagnosisData((prev) => ({
+      ...prev,
+      summary: preset.summary,
+      severity: preset.severity,
+      recommendation: preset.recommendation,
+      affectedSystems: preset.systems,
+    }));
+  };
+
+  const handleToggleDiagnosisSystem = (system: string) => {
+    setDiagnosisData((prev) => {
+      const exists = prev.affectedSystems.includes(system);
+      return {
+        ...prev,
+        affectedSystems: exists
+          ? prev.affectedSystems.filter((s) => s !== system)
+          : [...prev.affectedSystems, system],
+      };
+    });
+  };
+
+  // Paso 5: Enviar diagnóstico por WhatsApp al cliente con dictamen personalizado
+  const handleSendDiagnosisWhatsApp = () => {
+    handleSaveDiagnosis();
+    const cleanPhone = (order.customer.fiscalData.whatsapp || order.customer.phone).replace(/\D/g, '');
+    const severityEmoji =
+      diagnosisData.severity === 'critico'
+        ? '🔴 RIESGO CRÍTICO / NO CIRCULAR'
+        : diagnosisData.severity === 'urgente'
+        ? '🟡 DESGASTE MODERADO / ATENCIÓN URGENTE'
+        : '🟢 SERVICIO PREVENTIVO';
+
+    const message = encodeURIComponent(
+      `Hola ${order.customer.name}, te saluda tu Asesor de Servicio de Sr. Mecánico.\n\n` +
+      `📋 DICTAMEN TÉCNICO REGISTRADO:\n` +
+      `Vehículo: ${order.vehicle.make} ${order.vehicle.model} (${order.vehicle.plate})\n` +
+      `Folio de Orden: ${order.orderNumber}\n` +
+      `Nivel de Prioridad: ${severityEmoji}\n` +
+      `Sistemas Afectados: ${diagnosisData.affectedSystems.join(', ')}\n\n` +
+      `Diagnóstico del Especialista:\n"${diagnosisData.summary}"\n\n` +
+      `Recomendación del Taller:\n${diagnosisData.recommendation}\n\n` +
+      `Puedes consultar las fotos de evidencia y autorizar tu cotización en tu portal en vivo.`
+    );
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
   };
 
   // Paso 6: Agregar Pieza
@@ -1542,13 +1720,32 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
                         {photo && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                       </div>
 
-                      <button
-                        onClick={() => handleOpenCameraForPhoto(pos.view, pos.label)}
-                        className="w-full py-2 px-3 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <Camera className="w-3.5 h-3.5 text-[#D05E28]" />
-                        <span>{photo ? 'Reemplazar' : 'Tomar Foto'}</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCameraForPhoto(pos.view, pos.label)}
+                          className="flex-1 py-2 px-2.5 rounded-xl bg-[#1A253B] hover:bg-[#273756] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Camera className="w-3.5 h-3.5 text-[#D05E28]" />
+                          <span>{photo ? 'Reemplazar' : 'Tomar Foto'}</span>
+                        </button>
+                        <label
+                          title="Abrir cámara nativa del celular o galería sin pedir permisos"
+                          className="p-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 cursor-pointer transition flex items-center justify-center shrink-0"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleDirectFileCapture(pos.view, pos.label, file);
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1576,73 +1773,12 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
 
       {/* PASO 5: Entrega de diagnóstico con fotos de evidencia al cliente */}
       {currentAdvisorStep === 5 && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="font-bold text-xl text-[#1A253B] flex items-center gap-2.5">
-                  <AlertCircle className="w-5 h-5 text-[#D05E28]" />
-                  <span>Paso 5: Entrega de Diagnóstico con Fotos de Evidencia</span>
-                </h3>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  Comparte el expediente técnico y las evidencias con el cliente antes de cotizar.
-                </p>
-              </div>
-
-              <button
-                onClick={handleSendDiagnosisWhatsApp}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center gap-2 shadow-xs cursor-pointer"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Enviar al WhatsApp del Cliente</span>
-              </button>
-            </div>
-
-            {/* Resumen del diagnóstico */}
-            <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-900 block">
-                Dictamen Técnico Registrado:
-              </span>
-              <p className="text-base text-slate-800 leading-relaxed font-medium">
-                {order.diagnosisSummary || 'Desgaste crítico detectado en balatas y suspensión delantera.'}
-              </p>
-            </div>
-
-            {/* Fotos de Evidencia del Diagnóstico */}
-            <div className="space-y-3">
-              <span className="text-sm font-bold text-[#1A253B] block">
-                Evidencias de Componentes Dañados (Inspección en Taller):
-              </span>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {parts.map((p) => (
-                  <div key={p.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                    <span className="text-sm font-bold text-[#1A253B] block">{p.name}</span>
-                    <div className="h-36 rounded-lg overflow-hidden bg-slate-200 border border-slate-300">
-                      <img src={p.damagedPhotoUrl} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-xs text-red-600 font-bold block">{p.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              <button
-                onClick={() => setCurrentAdvisorStep(2)}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 cursor-pointer"
-              >
-                Volver al Paso 2
-              </button>
-              <button
-                onClick={() => setCurrentAdvisorStep(6)}
-                className="px-6 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white font-bold text-sm sm:text-base flex items-center gap-2 cursor-pointer shadow-xs"
-              >
-                <span>Avanzar al Paso 6: Cotización</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <M2DiagnosisTechnical
+          order={order}
+          onUpdateOrder={onUpdateOrder}
+          onNextStep={() => setCurrentAdvisorStep(6)}
+          onPrevStep={() => setCurrentAdvisorStep(2)}
+        />
       )}
 
       {/* PASO 6: Cotización de lo urgente */}

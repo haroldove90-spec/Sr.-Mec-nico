@@ -20,6 +20,7 @@ import { VehicleServiceOrder } from '../../types';
 // Componentes reutilizados en los 16 pasos
 import { M1Reception } from '../modules/M1Reception';
 import { M2Inspection55 } from '../modules/M2Inspection55';
+import { M2DiagnosisTechnical } from '../modules/M2DiagnosisTechnical';
 import { M3QuoteAuthorization } from '../modules/M3QuoteAuthorization';
 import { M4WorkshopEvidence } from '../modules/M4WorkshopEvidence';
 import { M4PurchasesAudit } from '../modules/M4PurchasesAudit';
@@ -214,10 +215,11 @@ export const LinearWorkflowView: React.FC<LinearWorkflowViewProps> = ({
           />
         )}
         {currentStep === 5 && (
-          <M3QuoteAuthorization
+          <M2DiagnosisTechnical
             order={order}
             onUpdateOrder={onUpdateOrder}
             onNextStep={handleNextStepAuto}
+            onPrevStep={() => goToStep(4)}
           />
         )}
         {currentStep === 6 && (
