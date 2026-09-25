@@ -30,6 +30,7 @@ import {
   Copy,
   ExternalLink,
   Send,
+  BookOpen,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -49,6 +50,7 @@ interface AdvisorRegistrationFlowProps {
   onUpdateOrder: (updated: VehicleServiceOrder) => void;
   onNewOrder: () => void;
   onRecordMovement?: (movement: Omit<AdvisorMovement, 'id' | 'timestamp'>) => void;
+  onOpenManual?: () => void;
 }
 
 type AdvisorStep = 1 | 2 | 5 | 6 | 7 | 14;
@@ -118,6 +120,7 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
   onUpdateOrder,
   onNewOrder,
   onRecordMovement,
+  onOpenManual,
 }) => {
   const [currentAdvisorStep, setCurrentAdvisorStep] = useState<AdvisorStep>(1);
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
@@ -668,14 +671,28 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
           </p>
         </div>
 
-        {/* Botón para registrar un nuevo auto en el taller */}
-        <button
-          onClick={onNewOrder}
-          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-sm sm:text-base font-bold shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Registrar Nuevo Auto</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {onOpenManual && (
+            <button
+              type="button"
+              onClick={onOpenManual}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-300 hover:border-[#D05E28] hover:bg-amber-50 text-[#1A253B] hover:text-[#D05E28] text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
+              title="Consultar Manual del Asesor"
+            >
+              <BookOpen className="w-5 h-5 text-[#D05E28]" />
+              <span>Manual del Asesor</span>
+            </button>
+          )}
+
+          {/* Botón para registrar un nuevo auto en el taller */}
+          <button
+            onClick={onNewOrder}
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#D05E28] hover:bg-[#b84e1e] text-white text-sm sm:text-base font-bold shadow-xs transition cursor-pointer"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Registrar Nuevo Auto</span>
+          </button>
+        </div>
       </div>
 
       {savedSuccess && (
@@ -711,6 +728,18 @@ export const AdvisorRegistrationFlow: React.FC<AdvisorRegistrationFlowProps> = (
               </button>
             );
           })}
+
+          {onOpenManual && (
+            <button
+              type="button"
+              onClick={onOpenManual}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-amber-50 hover:bg-amber-100 text-[#D05E28] border border-[#D05E28]/30 transition cursor-pointer whitespace-nowrap ml-auto"
+              title="Abrir Manual de Operación Oficial del Asesor"
+            >
+              <BookOpen className="w-4 h-4 text-[#D05E28]" />
+              <span>Manual del Asesor</span>
+            </button>
+          )}
         </div>
       </div>
 

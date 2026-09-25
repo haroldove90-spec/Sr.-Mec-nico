@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   ClipboardList,
@@ -23,20 +23,45 @@ import {
   ShieldAlert,
   ChevronRight,
   ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
 import { RoleId } from '../../types';
 
 interface UserManualModuleProps {
   activeRole: RoleId;
+  onBack?: () => void;
 }
 
-export const UserManualModule: React.FC<UserManualModuleProps> = ({ activeRole }) => {
-  // En rol admin permite alternar entre su rol y la vista global completa
-  const [selectedRoleView, setSelectedRoleView] = useState<RoleId>(activeRole);
-  const [viewMode, setViewMode] = useState<'role' | 'global'>(activeRole === 'admin' ? 'global' : 'role');
+export const UserManualModule: React.FC<UserManualModuleProps> = ({ activeRole, onBack }) => {
+  // Asegurar que el rol asesor o cualquier rol comience mostrando su sección correspondiente
+  const [selectedRoleView, setSelectedRoleView] = useState<RoleId>(activeRole || 'front_desk');
+  const [viewMode, setViewMode] = useState<'role' | 'global'>('role');
+
+  // Mantener sincronizado cuando cambie el rol activo
+  useEffect(() => {
+    setSelectedRoleView(activeRole || 'front_desk');
+    setViewMode('role');
+  }, [activeRole]);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const getRoleLabel = (role: RoleId) => {
+    switch (role) {
+      case 'front_desk':
+        return 'Asesor de Servicio';
+      case 'mechanic':
+        return 'Jefe de Taller / Mecánico';
+      case 'admin':
+        return 'Administración y Caja';
+      case 'director':
+        return 'Director General';
+      case 'client':
+        return 'Cliente';
+      default:
+        return 'Usuario';
+    }
   };
 
   return (
@@ -44,9 +69,22 @@ export const UserManualModule: React.FC<UserManualModuleProps> = ({ activeRole }
       {/* Header Institucional del Manual */}
       <div className="bg-gradient-to-r from-slate-900 via-[#1A253B] to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 print:bg-none print:text-black print:p-0 print:border-b">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D05E28]/20 text-[#D05E28] border border-[#D05E28]/40 text-xs font-bold uppercase tracking-wider print:hidden">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Guía Oficial de Operación • Sr. Mecánico</span>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold transition cursor-pointer print:hidden"
+                title="Regresar a la pantalla anterior"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Volver</span>
+              </button>
+            )}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D05E28]/20 text-[#D05E28] border border-[#D05E28]/40 text-xs font-bold uppercase tracking-wider print:hidden">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Guía Oficial de Operación • Sr. Mecánico</span>
+            </div>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
             Manual de Usuario y Operación
@@ -56,33 +94,31 @@ export const UserManualModule: React.FC<UserManualModuleProps> = ({ activeRole }
           </p>
         </div>
 
-        {/* Acciones de Impresión y Descarga */}
+        {/* Acciones de Impresión, Vista y Descarga */}
         <div className="flex flex-wrap items-center gap-3 shrink-0 print:hidden">
-          {activeRole === 'admin' && (
-            <div className="flex bg-white/10 p-1 rounded-2xl border border-white/20">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('role');
-                  setSelectedRoleView('admin');
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  viewMode === 'role' ? 'bg-[#D05E28] text-white' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Mi Rol
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('global')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  viewMode === 'global' ? 'bg-[#D05E28] text-white' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Manual Global (Todos)
-              </button>
-            </div>
-          )}
+          <div className="flex bg-white/10 p-1 rounded-2xl border border-white/20">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('role');
+                setSelectedRoleView(activeRole);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                viewMode === 'role' ? 'bg-[#D05E28] text-white shadow-xs' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              Mi Rol ({getRoleLabel(activeRole).split(' ')[0]})
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('global')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                viewMode === 'global' ? 'bg-[#D05E28] text-white shadow-xs' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              Manual Global (Todos)
+            </button>
+          </div>
 
           <button
             type="button"
@@ -96,42 +132,48 @@ export const UserManualModule: React.FC<UserManualModuleProps> = ({ activeRole }
         </div>
       </div>
 
-      {/* Selector de Pestañas de Rol (Si está en modo admin global o para consultar otros roles) */}
-      {(viewMode === 'global' || activeRole === 'admin') && (
-        <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs flex items-center gap-2 overflow-x-auto print:hidden">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 shrink-0">
-            Ver Rol:
-          </span>
-          {[
-            { id: 'front_desk' as RoleId, label: 'Asesor de Servicio', icon: ClipboardList },
-            { id: 'mechanic' as RoleId, label: 'Jefe de Taller / Mecánico', icon: Wrench },
-            { id: 'admin' as RoleId, label: 'Administración y Caja', icon: Receipt },
-            { id: 'director' as RoleId, label: 'Director General y CRM', icon: TrendingUp },
-            { id: 'client' as RoleId, label: 'Cliente (Propietario)', icon: Car },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isSelected = selectedRoleView === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
-                  setSelectedRoleView(tab.id);
-                  if (activeRole !== 'admin') setViewMode('role');
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
-                  isSelected
-                    ? 'bg-[#1A253B] text-white shadow-xs'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isSelected ? 'text-[#D05E28]' : 'text-slate-400'}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Selector de Pestañas de Rol (Siempre disponible para que cualquier rol pueda consultar su guía o conocer otros roles) */}
+      <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs flex items-center gap-2 overflow-x-auto print:hidden">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 shrink-0">
+          Manual Por Rol:
+        </span>
+        {[
+          { id: 'front_desk' as RoleId, label: 'Asesor de Servicio', icon: ClipboardList },
+          { id: 'mechanic' as RoleId, label: 'Jefe de Taller / Mecánico', icon: Wrench },
+          { id: 'admin' as RoleId, label: 'Administración y Caja', icon: Receipt },
+          { id: 'director' as RoleId, label: 'Director General y CRM', icon: TrendingUp },
+          { id: 'client' as RoleId, label: 'Cliente (Propietario)', icon: Car },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isSelected = viewMode === 'role' && selectedRoleView === tab.id;
+          const isCurrentActive = activeRole === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setSelectedRoleView(tab.id);
+                setViewMode('role');
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
+                isSelected
+                  ? 'bg-[#1A253B] text-white shadow-xs'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isSelected ? 'text-[#D05E28]' : 'text-slate-400'}`} />
+              <span>{tab.label}</span>
+              {isCurrentActive && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
+                  isSelected ? 'bg-[#D05E28] text-white' : 'bg-slate-200 text-slate-700'
+                }`}>
+                  Tú
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Vista de Contenido del Manual */}
       {viewMode === 'global' ? (

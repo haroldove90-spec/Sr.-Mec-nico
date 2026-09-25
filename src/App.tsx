@@ -353,9 +353,13 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_MOVEMENTS, JSON.stringify(advisorMovements));
   }, [advisorMovements]);
 
-  // Proteger al rol Asesor y Cliente: Nunca permitir acceso a los 16 pasos ni a módulos ajenos
+  // Proteger al rol Asesor: Bloquear acceso a los 16 pasos o módulos ajenos, pero permitir sus módulos advisor_* y role_manual
   useEffect(() => {
-    if (activeRole === 'front_desk' && (activeModule === 'linear_16_steps' || !activeModule.startsWith('advisor_'))) {
+    if (
+      activeRole === 'front_desk' &&
+      (activeModule === 'linear_16_steps' ||
+        (!activeModule.startsWith('advisor_') && activeModule !== 'role_manual'))
+    ) {
       setActiveModule('advisor_registration');
       localStorage.setItem(STORAGE_KEY_MODULE, 'advisor_registration');
     }
@@ -662,7 +666,10 @@ export default function App() {
         onLogout={handleLogout}
         onToggleSidebar={activeRole !== 'client' ? () => setIsSidebarOpen(!isSidebarOpen) : undefined}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
-        onOpenManual={() => setActiveModule('role_manual')}
+        onOpenManual={() => {
+          setActiveModule('role_manual');
+          localStorage.setItem(STORAGE_KEY_MODULE, 'role_manual');
+        }}
         activeOrderNumber={currentOrder?.orderNumber}
         notifications={notifications}
         onMarkNotificationAsRead={handleMarkNotificationAsRead}
@@ -686,7 +693,10 @@ export default function App() {
             onClose={() => setIsSidebarOpen(false)}
             activeRole={activeRole}
             activeModule={activeModule}
-            onSelectModule={(mod) => setActiveModule(mod)}
+            onSelectModule={(mod) => {
+              setActiveModule(mod);
+              localStorage.setItem(STORAGE_KEY_MODULE, mod);
+            }}
             orders={orders}
             selectedOrderId={selectedOrderId}
             onSelectOrder={(id) => setSelectedOrderId(id)}
@@ -712,6 +722,10 @@ export default function App() {
               onUpdateOrder={handleUpdateCurrentOrder}
               onNewOrder={handleCreateNewOrder}
               onRecordMovement={handleRecordAdvisorMovement}
+              onOpenManual={() => {
+                setActiveModule('role_manual');
+                localStorage.setItem(STORAGE_KEY_MODULE, 'role_manual');
+              }}
             />
           )}
 
@@ -754,7 +768,10 @@ export default function App() {
           )}
 
           {/* Portal del Cliente: Monitoreo en Vivo */}
-          {(activeRole === 'client' || activeModule.startsWith('client_')) && currentOrder && (
+          {(activeRole === 'client' || activeModule.startsWith('client_')) &&
+            activeModule !== 'role_manual' &&
+            activeModule !== 'client_manual' &&
+            currentOrder && (
             <ClientPortal
               order={currentOrder}
               onUpdateOrder={handleUpdateCurrentOrder}
@@ -828,7 +845,33 @@ export default function App() {
 
           {/* Módulo Oficial: Manual de Usuario por Rol y Manual Global Descargable */}
           {(activeModule === 'role_manual' || activeModule === 'client_manual') && (
-            <UserManualModule activeRole={activeRole} />
+            <UserManualModule
+              activeRole={activeRole}
+              onBack={() => {
+                switch (activeRole as RoleId) {
+                  case 'front_desk':
+                    setActiveModule('advisor_registration');
+                    localStorage.setItem(STORAGE_KEY_MODULE, 'advisor_registration');
+                    break;
+                  case 'mechanic':
+                    setActiveModule('m2_inspection');
+                    localStorage.setItem(STORAGE_KEY_MODULE, 'm2_inspection');
+                    break;
+                  case 'admin':
+                    setActiveModule('m4_purchases');
+                    localStorage.setItem(STORAGE_KEY_MODULE, 'm4_purchases');
+                    break;
+                  case 'director':
+                    setActiveModule('m6_crm_director');
+                    localStorage.setItem(STORAGE_KEY_MODULE, 'm6_crm_director');
+                    break;
+                  case 'client':
+                    setActiveModule('client_live');
+                    localStorage.setItem(STORAGE_KEY_MODULE, 'client_live');
+                    break;
+                }
+              }}
+            />
           )}
         </main>
       </div>
