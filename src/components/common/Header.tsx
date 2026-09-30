@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, UserCircle2, Menu, Sparkles, BookOpen } from 'lucide-react';
+import { LogOut, UserCircle2, Menu, Sparkles, BookOpen, Bot } from 'lucide-react';
 import { RoleId } from '../../types';
 import { AppNotification } from '../../types/notifications';
 import { PWAInstallButton } from './PWAInstallButton';
@@ -11,6 +11,7 @@ interface HeaderProps {
   onToggleSidebar?: () => void;
   onOpen16Steps?: () => void;
   onOpenManual?: () => void;
+  onOpenAiChat?: () => void;
   activeOrderNumber?: string;
   notifications?: AppNotification[];
   onMarkNotificationAsRead?: (id: string) => void;
@@ -41,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   onOpen16Steps,
   onOpenManual,
+  onOpenAiChat,
   activeOrderNumber,
   notifications = [],
   onMarkNotificationAsRead = () => {},
@@ -85,6 +87,19 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>16 Pasos {activeOrderNumber ? `(${activeOrderNumber})` : ''}</span>
+            </button>
+          )}
+
+          {/* Botón Acceso Rápido al Asistente Técnico IA */}
+          {onOpenAiChat && (
+            <button
+              type="button"
+              onClick={onOpenAiChat}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-300 hover:border-[#D05E28] bg-slate-900 text-white hover:bg-[#1A253B] text-xs font-bold transition cursor-pointer shrink-0 shadow-xs"
+              title="Abrir Asistente Técnico Inteligente con IA"
+            >
+              <Bot className="w-4 h-4 text-[#D05E28]" />
+              <span className="hidden sm:inline">Chat IA</span>
             </button>
           )}
 

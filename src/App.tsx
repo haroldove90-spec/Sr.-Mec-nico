@@ -30,6 +30,7 @@ import { M6CRMProductivity } from './components/modules/M6CRMProductivity';
 import { ClientPortal } from './components/modules/ClientPortal';
 import { ClientLoginView } from './components/modules/ClientLoginView';
 import { UserManualModule } from './components/modules/UserManualModule';
+import { TechnicalAiAssistantChat } from './components/chat/TechnicalAiAssistantChat';
 
 // 16-Step Linear Protocol View
 import { LinearWorkflowView } from './components/workflow/LinearWorkflowView';
@@ -129,6 +130,7 @@ export default function App() {
     return 'advisor_registration';
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   // Orders State with localStorage persistence
   const [orders, setOrders] = useState<VehicleServiceOrder[]>(() => {
@@ -636,7 +638,18 @@ export default function App() {
 
   // 1. Start Screen
   if (!activeRole) {
-    return <RoleSelector onSelectRole={handleSelectRole} />;
+    return (
+      <>
+        <RoleSelector onSelectRole={handleSelectRole} />
+        <TechnicalAiAssistantChat
+          activeOrder={currentOrder}
+          allOrders={orders}
+          userRole={null}
+          isOpenExternal={isAiChatOpen}
+          onToggleExternal={(open) => setIsAiChatOpen(open)}
+        />
+      </>
+    );
   }
 
   // 2. Portal de Monitoreo del Cliente: Formulario de Acceso por Correo y Teléfono
@@ -652,6 +665,13 @@ export default function App() {
           orders={orders}
           onLoginSuccess={handleClientLoginSuccess}
           onBackToRoles={handleLogout}
+        />
+        <TechnicalAiAssistantChat
+          activeOrder={currentOrder}
+          allOrders={orders}
+          userRole="client"
+          isOpenExternal={isAiChatOpen}
+          onToggleExternal={(open) => setIsAiChatOpen(open)}
         />
       </>
     );
@@ -670,6 +690,7 @@ export default function App() {
           setActiveModule('role_manual');
           localStorage.setItem(STORAGE_KEY_MODULE, 'role_manual');
         }}
+        onOpenAiChat={() => setIsAiChatOpen(true)}
         activeOrderNumber={currentOrder?.orderNumber}
         notifications={notifications}
         onMarkNotificationAsRead={handleMarkNotificationAsRead}
@@ -885,6 +906,15 @@ export default function App() {
           localStorage.setItem(STORAGE_KEY_MODULE, mod);
         }}
         onOpen16Steps={() => setActiveModule('linear_16_steps')}
+      />
+
+      {/* Asistente Técnico Inteligente con IA (Burbuja Flotante y Chat Demo) */}
+      <TechnicalAiAssistantChat
+        activeOrder={currentOrder}
+        allOrders={orders}
+        userRole={activeRole}
+        isOpenExternal={isAiChatOpen}
+        onToggleExternal={(open) => setIsAiChatOpen(open)}
       />
     </div>
   );
